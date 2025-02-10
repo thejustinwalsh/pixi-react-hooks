@@ -19,7 +19,7 @@ function LoadOne() {
   const {isLoaded, error, data: texture} = useAssets<Texture>('./example.png');
 
   if (isLoading) return <pixiText text="Loading..." />;
-  if (error) return <pixiText text=`Error ${error.message}` />;
+  if (error) return <pixiText text={`Error ${error.message}`} />;
 
   return <pixiSprite texture={texture} />
 }
@@ -30,7 +30,7 @@ function LoadMany() {
   const texture2: Texture = data['./example-2.png'];
 
   if (isLoading) return <pixiText text="Loading..." />;
-  if (error) return <pixiText text=`Error ${error.message}` />;
+  if (error) return <pixiText text={`Error ${error.message}`} />;
 
   return (
     <pixiContainer>
