@@ -20,7 +20,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": {
+    "./useAssets": {
       "import": {
         "types": "./dist/useAssets.d.ts",
         "default": "./dist/useAssets.js"
