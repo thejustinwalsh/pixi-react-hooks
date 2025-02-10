@@ -1,0 +1,51 @@
+{
+  "name": "pixi-react-hooks",
+  "version": "0.0.1",
+  "description": "@pixi/react hooks library",
+  "author": "Justin Walsh",
+  "keywords": [
+    "pixi",
+    "react",
+    "hooks"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thejustinwalsh/pixi-react-hooks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thejustinwalsh/pixi-react-hooks/issues"
+  },
+  "homepage": "https://github.com/thejustinwalsh/pixi-react-hooks#readme",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/useAssets.d.ts",
+        "default": "./dist/useAssets.js"
+      },
+      "require": {
+        "types": "./dist/useAssets.d.ts",
+        "default": "./dist/useAssets.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build",
+    "prepare": "husky"
+  },
+  "peerDependencies": {
+    "pixi.js": "^8.7.3",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  }
+}
