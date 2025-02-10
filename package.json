@@ -36,8 +36,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "npm run build",
-    "prepare": "husky"
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "pixi.js": "^8.7.3",

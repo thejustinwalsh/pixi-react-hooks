@@ -4,11 +4,11 @@
 ## Installation
 ```sh
 # npm
-npm i pixi-react-hooks
+npm i git+https://github.com/thejustinwalsh/pixi-react-hooks.git
 # yarn
-yarn add pixi-react-hooks
+yarn add git+https://github.com/thejustinwalsh/pixi-react-hooks.git
 # pnpm
-pnpm add pixi-react-hooks
+pnpm add git+https://github.com/thejustinwalsh/pixi-react-hooks.git
 ```
 
 ## Hooks
