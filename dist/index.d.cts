@@ -1,9 +1,20 @@
 import { UnresolvedAsset, ResolvedAsset, AssetsManifest, Assets } from 'pixi.js';
 
 type AssetState<T> = {
-    isLoaded: boolean;
+    status: 'pending';
+    isLoaded: false;
     error: Error | null;
+    data: null;
+} | {
+    status: 'loaded';
+    isLoaded: true;
+    error: null;
     data: T;
+} | {
+    status: 'error';
+    isLoaded: false;
+    error: Error;
+    data: null;
 };
 
 declare function useAssets<T>(urls: string | UnresolvedAsset): AssetState<T | undefined>;
