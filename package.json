@@ -49,13 +49,15 @@
     "prepublishOnly": "npm run build",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "echo \"TODO\""
+    "test": "vitest"
   },
   "peerDependencies": {
     "pixi.js": "^8.7.3",
     "react": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/jest-dom": "^6.1.5",
     "@types/react": "^19.0.8",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
@@ -63,7 +65,10 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
     "jiti": "^2.4.2",
+    "jsdom": "^26.0.0",
     "tsup": "^8.3.6",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "react-error-boundary": "^4.0.12"
   }
 }
