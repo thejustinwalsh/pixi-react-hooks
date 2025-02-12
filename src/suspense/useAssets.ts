@@ -1,4 +1,4 @@
-import {use} from 'react';
+import {Usable, use} from 'react';
 import {useAssetState} from '../hooks/useAssetState';
 import {isLoaded, load, resolve} from '../utils';
 
@@ -9,6 +9,5 @@ export function useAssets<T>(urls: string[] | UnresolvedAsset[]): Record<string,
 
 export function useAssets<T>(urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) {
   const [state, _, thenable] = useAssetState<T>(urls, isLoaded, load, resolve);
-
-  return state.isLoaded ? state.data : use(thenable);
+  return state.isLoaded ? state.data : use(thenable as Usable<T>); // TODO: Ensure Promise or null based on state.isLoaded
 }
