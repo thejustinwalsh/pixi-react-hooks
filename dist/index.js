@@ -1,55 +1,51 @@
 import {
   isBundleLoaded,
   isLoaded,
+  load,
+  loadBundle,
   resolve,
   resolveBundle,
   useAssetState
-} from "./chunk-6RBS27UB.js";
+} from "./chunk-FGAZE7EW.js";
 
-// src/assets/useAssets.ts
+// src/useAssets.ts
 import { useEffect } from "react";
-import { Assets } from "pixi.js";
 function useAssets(urls) {
-  const { state, setState, thenable } = useAssetState(urls, isLoaded, Assets.load, resolve);
+  const [state, setState, thenable] = useAssetState(urls, isLoaded, load, resolve);
   useEffect(() => {
     thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
-  }, [thenable]);
+  }, [setState, thenable]);
   return state;
 }
 
-// src/assets/useAssetBundle.ts
+// src/useAssetBundle.ts
 import { useEffect as useEffect2 } from "react";
-import { Assets as Assets2 } from "pixi.js";
 function useAssetBundle(bundles) {
-  const { state, setState, thenable } = useAssetState(bundles, isBundleLoaded, Assets2.loadBundle, resolveBundle);
+  const [state, setState, thenable] = useAssetState(bundles, isBundleLoaded, loadBundle, resolveBundle);
   useEffect2(() => {
     thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
-  }, [thenable]);
+  }, [setState, thenable]);
   return state;
 }
 
-// src/assets/useAssetManifest.ts
-import { Assets as Assets3 } from "pixi.js";
-import { useEffect as useEffect3, useState as useState2 } from "react";
-var manifestSingleton = null;
+// src/useAssetManifest.ts
+import { Assets } from "pixi.js";
+import { useEffect as useEffect3, useState } from "react";
 function useAssetManifest(manifest, bundles = [], options = {}) {
-  const [isLoaded2, setIsLoaded] = useState2(false);
-  useEffect3(() => {
-    (async () => {
-      await Assets3.init({
-        ...options,
-        manifest
-      });
-      Assets3.backgroundLoadBundle(
+  const [{ isLoaded: isLoaded2, thenable }, setState] = useState(() => ({
+    isLoaded: false,
+    thenable: Assets.init({
+      ...options,
+      manifest
+    }).then(() => {
+      Assets.backgroundLoadBundle(
         bundles.length > 0 ? bundles : manifest.bundles.map((bundle) => bundle.name)
       );
-      setIsLoaded(true);
-    })();
-  }, []);
-  if (manifestSingleton !== null && manifestSingleton !== manifest) {
-    console.warn("useAssetManifest should only be used once in your app");
-  }
-  manifestSingleton = manifest;
+    })
+  }));
+  useEffect3(() => {
+    thenable.then(() => setState((s) => ({ ...s, isLoaded: true })));
+  }, [thenable]);
   return { isLoaded: isLoaded2 };
 }
 export {
