@@ -6,14 +6,14 @@ import {
   resolve,
   resolveBundle,
   useAssetState
-} from "./chunk-FGAZE7EW.js";
+} from "./chunk-PHNTXHPS.js";
 
 // src/useAssets.ts
 import { useEffect } from "react";
 function useAssets(urls) {
   const [state, setState, thenable] = useAssetState(urls, isLoaded, load, resolve);
   useEffect(() => {
-    thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
+    thenable?.then((data) => setState({ status: "loaded", isLoaded: true, error: null, data })).catch((error) => setState({ status: "error", isLoaded: false, error, data: null }));
   }, [setState, thenable]);
   return state;
 }
@@ -23,7 +23,7 @@ import { useEffect as useEffect2 } from "react";
 function useAssetBundle(bundles) {
   const [state, setState, thenable] = useAssetState(bundles, isBundleLoaded, loadBundle, resolveBundle);
   useEffect2(() => {
-    thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
+    thenable?.then((data) => setState({ status: "loaded", isLoaded: true, error: null, data })).catch((error) => setState({ status: "error", isLoaded: false, error, data: null }));
   }, [setState, thenable]);
   return state;
 }
