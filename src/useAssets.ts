@@ -13,8 +13,8 @@ export function useAssets<T>(urls: string | UnresolvedAsset | string[] | Unresol
 
   useEffect(() => {
     thenable
-      ?.then(data => setState({isLoaded: true, error: null, data}))
-      .catch(error => setState({isLoaded: true, error, data: undefined}));
+      ?.then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
+      .catch(error => setState({status: 'error', isLoaded: false, error, data: null}));
   }, [setState, thenable]);
 
   return state;

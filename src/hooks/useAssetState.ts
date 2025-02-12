@@ -1,13 +1,13 @@
 import {useEffect, useState} from 'react';
 import {didKeyChange, createKey} from '../utils';
 
-import type {UnresolvedAsset} from 'pixi.js';
+import {Assets, type UnresolvedAsset} from 'pixi.js';
 import type {AssetState, HookState} from '../types';
 
 type AssetStateReturn<T> = [
   AssetState<T>,
   React.Dispatch<React.SetStateAction<AssetState<T>>>,
-  Promise<T>,
+  Promise<T> | null,
 ];
 
 export function useAssetState<T>(
@@ -15,15 +15,26 @@ export function useAssetState<T>(
   isLoaded: (urls: any) => boolean,
   load: <T>(urls: any) => Promise<T>,
   resolve: <T>(urls: any) => T,
-): AssetStateReturn<T | Record<string, T>> {
-  const [assetState, setAssetState] = useState<AssetState<T | Record<string, T>>>(() => ({
-    isLoaded: isLoaded(urls),
-    error: null,
-    data: resolve(urls),
-  }));
+): AssetStateReturn<T | Record<string, T> | null> {
+  const [assetState, setAssetState] = useState<AssetState<T | Record<string, T> | null>>(() => {
+    const loaded = isLoaded(urls);
+    return loaded
+      ? {
+          status: 'loaded',
+          isLoaded: true,
+          error: null,
+          data: resolve(urls),
+        }
+      : {
+          status: 'pending',
+          isLoaded: false,
+          error: null,
+          data: null,
+        };
+  });
 
   const [state, setState] = useState<HookState<T>>(() => ({
-    thenable: !assetState.isLoaded ? load(urls) : undefined,
+    thenable: !assetState.isLoaded ? load(urls) : null,
     key: createKey(urls),
   }));
 
@@ -34,7 +45,11 @@ export function useAssetState<T>(
         thenable: assetsLoaded ? state.thenable : load(urls),
         key: createKey(urls),
       }));
-      setAssetState({isLoaded: assetsLoaded, error: null, data: resolve(urls)});
+      setAssetState(
+        assetsLoaded
+          ? {status: 'loaded', isLoaded: true, error: null, data: resolve(urls)}
+          : {status: 'pending', isLoaded: false, error: null, data: null},
+      );
     }
   }, [urls, state.key, isLoaded, resolve, load]);
 
