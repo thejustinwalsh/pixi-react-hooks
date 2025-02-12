@@ -20,14 +20,24 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./useAssets": {
+    ".": {
       "import": {
-        "types": "./dist/useAssets.d.ts",
-        "default": "./dist/useAssets.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/useAssets.d.ts",
-        "default": "./dist/useAssets.cjs"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./suspense": {
+      "import": {
+        "types": "./dist/suspense/index.d.ts",
+        "default": "./dist/suspense/index.js"
+      },
+      "require": {
+        "types": "./dist/suspense/index.d.ts",
+        "default": "./dist/suspense/index.cjs"
       }
     }
   },
@@ -37,6 +47,8 @@
   "scripts": {
     "build": "tsup",
     "prepublishOnly": "npm run build",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "echo \"TODO\""
   },
   "peerDependencies": {
@@ -45,6 +57,12 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.8",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "eslint": "^9.20.1",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "jiti": "^2.4.2",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   }
