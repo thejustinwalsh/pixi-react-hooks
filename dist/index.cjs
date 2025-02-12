@@ -4,52 +4,48 @@
 
 
 
-var _chunkSGOR24EJcjs = require('./chunk-SGOR24EJ.cjs');
 
-// src/assets/useAssets.ts
+
+var _chunkY6YBMKNJcjs = require('./chunk-Y6YBMKNJ.cjs');
+
+// src/useAssets.ts
 var _react = require('react');
-var _pixijs = require('pixi.js');
 function useAssets(urls) {
-  const { state, setState, thenable } = _chunkSGOR24EJcjs.useAssetState.call(void 0, urls, _chunkSGOR24EJcjs.isLoaded, _pixijs.Assets.load, _chunkSGOR24EJcjs.resolve);
+  const [state, setState, thenable] = _chunkY6YBMKNJcjs.useAssetState.call(void 0, urls, _chunkY6YBMKNJcjs.isLoaded, _chunkY6YBMKNJcjs.load, _chunkY6YBMKNJcjs.resolve);
   _react.useEffect.call(void 0, () => {
     thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
-  }, [thenable]);
+  }, [setState, thenable]);
   return state;
 }
 
-// src/assets/useAssetBundle.ts
-
+// src/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const { state, setState, thenable } = _chunkSGOR24EJcjs.useAssetState.call(void 0, bundles, _chunkSGOR24EJcjs.isBundleLoaded, _pixijs.Assets.loadBundle, _chunkSGOR24EJcjs.resolveBundle);
+  const [state, setState, thenable] = _chunkY6YBMKNJcjs.useAssetState.call(void 0, bundles, _chunkY6YBMKNJcjs.isBundleLoaded, _chunkY6YBMKNJcjs.loadBundle, _chunkY6YBMKNJcjs.resolveBundle);
   _react.useEffect.call(void 0, () => {
     thenable == null ? void 0 : thenable.then((data) => setState({ isLoaded: true, error: null, data })).catch((error) => setState({ isLoaded: true, error, data: void 0 }));
-  }, [thenable]);
+  }, [setState, thenable]);
   return state;
 }
 
-// src/assets/useAssetManifest.ts
+// src/useAssetManifest.ts
+var _pixijs = require('pixi.js');
 
-
-var manifestSingleton = null;
 function useAssetManifest(manifest, bundles = [], options = {}) {
-  const [isLoaded2, setIsLoaded] = _react.useState.call(void 0, false);
-  _react.useEffect.call(void 0, () => {
-    (async () => {
-      await _pixijs.Assets.init({
-        ...options,
-        manifest
-      });
+  const [{ isLoaded: isLoaded2, thenable }, setState] = _react.useState.call(void 0, () => ({
+    isLoaded: false,
+    thenable: _pixijs.Assets.init({
+      ...options,
+      manifest
+    }).then(() => {
       _pixijs.Assets.backgroundLoadBundle(
         bundles.length > 0 ? bundles : manifest.bundles.map((bundle) => bundle.name)
       );
-      setIsLoaded(true);
-    })();
-  }, []);
-  if (manifestSingleton !== null && manifestSingleton !== manifest) {
-    console.warn("useAssetManifest should only be used once in your app");
-  }
-  manifestSingleton = manifest;
+    })
+  }));
+  _react.useEffect.call(void 0, () => {
+    thenable.then(() => setState((s) => ({ ...s, isLoaded: true })));
+  }, [thenable]);
   return { isLoaded: isLoaded2 };
 }
 
