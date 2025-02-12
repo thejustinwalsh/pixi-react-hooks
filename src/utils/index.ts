@@ -21,6 +21,11 @@ export const isBundleLoaded = (bundles: string | string[]) =>
     ? bundles.every(bundle => Assets.resolver.hasBundle(bundle))
     : Assets.resolver.hasBundle(bundles);
 
+export const load = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
+  Assets.load(urls);
+
+export const loadBundle = (bundles: string | string[]) => Assets.loadBundle(bundles);
+
 export const resolve = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
   Array.isArray(urls)
     ? urls.reduce((acc, url) => {

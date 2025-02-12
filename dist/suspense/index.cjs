@@ -4,27 +4,27 @@
 
 
 
-var _chunkSGOR24EJcjs = require('../chunk-SGOR24EJ.cjs');
 
-// src/assets/suspense/useAssets.ts
+
+var _chunkY6YBMKNJcjs = require('../chunk-Y6YBMKNJ.cjs');
+
+// src/suspense/useAssets.ts
 var _react = require('react');
-var _pixijs = require('pixi.js');
 function useAssets(urls) {
-  const { state, thenable } = _chunkSGOR24EJcjs.useAssetState.call(void 0, urls, _chunkSGOR24EJcjs.isLoaded, _pixijs.Assets.load, _chunkSGOR24EJcjs.resolve);
+  const [state, _, thenable] = _chunkY6YBMKNJcjs.useAssetState.call(void 0, urls, _chunkY6YBMKNJcjs.isLoaded, _chunkY6YBMKNJcjs.load, _chunkY6YBMKNJcjs.resolve);
   return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
 
-// src/assets/suspense/useAssetBundle.ts
-
+// src/suspense/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const { state, thenable } = _chunkSGOR24EJcjs.useAssetState.call(void 0, bundles, _chunkSGOR24EJcjs.isBundleLoaded, _pixijs.Assets.loadBundle, _chunkSGOR24EJcjs.resolveBundle);
+  const [state, _, thenable] = _chunkY6YBMKNJcjs.useAssetState.call(void 0, bundles, _chunkY6YBMKNJcjs.isBundleLoaded, _chunkY6YBMKNJcjs.loadBundle, _chunkY6YBMKNJcjs.resolveBundle);
   return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
 
-// src/assets/suspense/useAssetManifest.ts
+// src/suspense/useAssetManifest.ts
 
-
+var _pixijs = require('pixi.js');
 function useAssetManifest(manifest, bundles = [], options = {}) {
   const [thenable] = _react.useState.call(void 0, 
     () => _pixijs.Assets.init({ ...options, manifest }).then(

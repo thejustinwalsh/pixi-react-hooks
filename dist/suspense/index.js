@@ -1,34 +1,34 @@
 import {
   isBundleLoaded,
   isLoaded,
+  load,
+  loadBundle,
   resolve,
   resolveBundle,
   useAssetState
-} from "../chunk-6RBS27UB.js";
+} from "../chunk-FGAZE7EW.js";
 
-// src/assets/suspense/useAssets.ts
+// src/suspense/useAssets.ts
 import { use } from "react";
-import { Assets } from "pixi.js";
 function useAssets(urls) {
-  const { state, thenable } = useAssetState(urls, isLoaded, Assets.load, resolve);
+  const [state, _, thenable] = useAssetState(urls, isLoaded, load, resolve);
   return state.isLoaded ? state.data : use(thenable);
 }
 
-// src/assets/suspense/useAssetBundle.ts
+// src/suspense/useAssetBundle.ts
 import { use as use2 } from "react";
-import { Assets as Assets2 } from "pixi.js";
 function useAssetBundle(bundles) {
-  const { state, thenable } = useAssetState(bundles, isBundleLoaded, Assets2.loadBundle, resolveBundle);
+  const [state, _, thenable] = useAssetState(bundles, isBundleLoaded, loadBundle, resolveBundle);
   return state.isLoaded ? state.data : use2(thenable);
 }
 
-// src/assets/suspense/useAssetManifest.ts
+// src/suspense/useAssetManifest.ts
 import { use as use3, useState } from "react";
-import { Assets as Assets3 } from "pixi.js";
+import { Assets } from "pixi.js";
 function useAssetManifest(manifest, bundles = [], options = {}) {
   const [thenable] = useState(
-    () => Assets3.init({ ...options, manifest }).then(
-      () => Assets3.backgroundLoadBundle(
+    () => Assets.init({ ...options, manifest }).then(
+      () => Assets.backgroundLoadBundle(
         bundles.length > 0 ? bundles : manifest.bundles.map((bundle) => bundle.name)
       )
     )
