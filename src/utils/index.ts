@@ -6,7 +6,7 @@ export const key = (url: string | UnresolvedAsset) =>
   typeof url === 'string' ? url : (url.alias ?? url.src ?? '')?.toString();
 
 export const createKey = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
-  new Set(Array.isArray(urls) ? urls.map(key) : key(urls));
+  new Set(Array.isArray(urls) ? urls.map(key) : [key(urls)]);
 
 export const didKeyChange = (
   urls: string | UnresolvedAsset | string[] | UnresolvedAsset[],
