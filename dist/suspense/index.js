@@ -6,7 +6,7 @@ import {
   resolve,
   resolveBundle,
   useAssetState
-} from "../chunk-EWP2LBVQ.js";
+} from "../chunk-I47OIYB7.js";
 
 // src/suspense/useAssets.ts
 import { use } from "react";

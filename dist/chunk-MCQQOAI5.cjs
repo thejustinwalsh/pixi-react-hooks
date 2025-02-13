@@ -31,7 +31,6 @@ function loadFromCache(key2, load2) {
   return promise;
 }
 function useAssetState(urls, isLoaded2, load2, resolve2) {
-  console.log("useAssetState", urls);
   const [assetState, setAssetState] = _react.useState.call(void 0, () => {
     const loaded = isLoaded2(urls);
     return loaded ? {
@@ -83,4 +82,4 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
 
 
 exports.isLoaded = isLoaded; exports.isBundleLoaded = isBundleLoaded; exports.load = load; exports.loadBundle = loadBundle; exports.resolve = resolve; exports.resolveBundle = resolveBundle; exports.useAssetState = useAssetState;
-//# sourceMappingURL=chunk-YYFTSOGB.cjs.map
+//# sourceMappingURL=chunk-MCQQOAI5.cjs.map
