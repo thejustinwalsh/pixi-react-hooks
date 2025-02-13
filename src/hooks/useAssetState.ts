@@ -59,7 +59,6 @@ export function useAssetState<T, P extends AssetUrl>(
   load: <T>(urls: P) => Promise<T>,
   resolve: <T>(urls: P) => T,
 ): AssetStateReturn<T> {
-  console.log('useAssetState', urls);
   const [assetState, setAssetState] = useState<AssetState<T>>(() => {
     const loaded = isLoaded(urls);
     return loaded
