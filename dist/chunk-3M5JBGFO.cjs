@@ -17,20 +17,30 @@ var resolveBundle = (bundles) => _pixijs.Assets.resolver.resolveBundle(bundles);
 // src/hooks/useAssetState.ts
 var _react = require('react'); var _react2 = _interopRequireDefault(_react);
 
+
+// src/hooks/useAssetCache.ts
+
 var getCacheForType = (resourceType) => _react2.default.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.A.getCacheForType(
   resourceType
 );
 var createPromiseCache = () => /* @__PURE__ */ new Map();
-var getPromiseCache = () => getCacheForType(createPromiseCache);
-function loadFromCache(key2, load2) {
-  const cache = getPromiseCache();
+function loadFromCache(cache, key2, load2) {
   const cacheKey = Array.from(key2).join("|");
   let promise = cache.get(cacheKey);
-  if (!promise) promise = load2();
-  cache.set(cacheKey, promise);
+  if (!promise) {
+    promise = load2();
+    cache.set(cacheKey, promise);
+  }
   return promise;
 }
+function usePromiseCache() {
+  return getCacheForType(createPromiseCache);
+}
+
+// src/hooks/useAssetState.ts
 function useAssetState(urls, isLoaded2, load2, resolve2) {
+  const key2 = _react.useMemo.call(void 0, () => createKey(urls), [urls]);
+  const cache = usePromiseCache();
   const [assetState, setAssetState] = _react.useState.call(void 0, () => {
     const loaded = isLoaded2(urls);
     return loaded ? {
@@ -45,25 +55,21 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
       data: null
     };
   });
-  const [state, setState] = _react.useState.call(void 0, () => {
-    const key2 = createKey(urls);
-    return {
-      thenable: !assetState.isLoaded ? loadFromCache(key2, () => load2(urls)) : null,
-      key: key2
-    };
-  });
+  const [state, setState] = _react.useState.call(void 0, () => ({
+    thenable: !assetState.isLoaded ? loadFromCache(cache, key2, () => load2(urls)) : null,
+    key: key2
+  }));
   _react.useEffect.call(void 0, () => {
     if (didKeyChange(urls, state.key)) {
-      const assetsLoaded = isLoaded2(urls);
-      setState((state2) => ({
-        thenable: assetsLoaded ? state2.thenable : load2(urls),
-        key: createKey(urls)
-      }));
-      setAssetState(
-        assetsLoaded ? { status: "loaded", isLoaded: true, error: null, data: resolve2(urls) } : { status: "pending", isLoaded: false, error: null, data: null }
-      );
+      if (isLoaded2(urls)) {
+        setAssetState({ status: "loaded", isLoaded: true, error: null, data: resolve2(urls) });
+        setState((state2) => ({ ...state2, key: key2 }));
+      } else {
+        setState({ thenable: loadFromCache(cache, key2, () => load2(urls)), key: key2 });
+        setAssetState({ status: "pending", isLoaded: false, error: null, data: null });
+      }
     }
-  }, [urls, state.key, isLoaded2, resolve2, load2]);
+  }, [cache, isLoaded2, key2, load2, resolve2, state.key, urls]);
   if (assetState.status === "error") {
     return [assetState, setAssetState, state.thenable];
   }
@@ -82,4 +88,4 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
 
 
 exports.isLoaded = isLoaded; exports.isBundleLoaded = isBundleLoaded; exports.load = load; exports.loadBundle = loadBundle; exports.resolve = resolve; exports.resolveBundle = resolveBundle; exports.useAssetState = useAssetState;
-//# sourceMappingURL=chunk-MCQQOAI5.cjs.map
+//# sourceMappingURL=chunk-3M5JBGFO.cjs.map
