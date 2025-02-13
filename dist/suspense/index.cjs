@@ -6,23 +6,23 @@
 
 
 
-var _chunkMCQQOAI5cjs = require('../chunk-MCQQOAI5.cjs');
+var _chunk3M5JBGFOcjs = require('../chunk-3M5JBGFO.cjs');
 
 // src/suspense/useAssets.ts
 var _react = require('react');
 function useAssets(urls) {
-  const [state, _, thenable] = _chunkMCQQOAI5cjs.useAssetState.call(void 0, urls, _chunkMCQQOAI5cjs.isLoaded, _chunkMCQQOAI5cjs.load, _chunkMCQQOAI5cjs.resolve);
+  const [state, _, thenable] = _chunk3M5JBGFOcjs.useAssetState.call(void 0, urls, _chunk3M5JBGFOcjs.isLoaded, _chunk3M5JBGFOcjs.load, _chunk3M5JBGFOcjs.resolve);
   return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
 
 // src/suspense/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const [state, _, thenable] = _chunkMCQQOAI5cjs.useAssetState.call(void 0, 
+  const [state, _, thenable] = _chunk3M5JBGFOcjs.useAssetState.call(void 0, 
     bundles,
-    _chunkMCQQOAI5cjs.isBundleLoaded,
-    _chunkMCQQOAI5cjs.loadBundle,
-    _chunkMCQQOAI5cjs.resolveBundle
+    _chunk3M5JBGFOcjs.isBundleLoaded,
+    _chunk3M5JBGFOcjs.loadBundle,
+    _chunk3M5JBGFOcjs.resolveBundle
   );
   return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
