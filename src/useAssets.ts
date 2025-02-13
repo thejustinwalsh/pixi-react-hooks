@@ -3,13 +3,13 @@ import {useAssetState} from './hooks/useAssetState';
 import {isLoaded, load, resolve} from './utils';
 
 import type {UnresolvedAsset} from 'pixi.js';
-import type {AssetState} from './types';
+import type {AssetState, AssetUrl} from './types';
 
 export function useAssets<T>(urls: string | UnresolvedAsset): AssetState<T | undefined>;
 export function useAssets<T>(urls: string[] | UnresolvedAsset[]): AssetState<Record<string, T>>;
 
-export function useAssets<T>(urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) {
-  const [state, setState, thenable] = useAssetState<T>(urls, isLoaded, load, resolve);
+export function useAssets<T>(urls: AssetUrl) {
+  const [state, setState, thenable] = useAssetState<T, AssetUrl>(urls, isLoaded, load, resolve);
 
   useEffect(() => {
     thenable

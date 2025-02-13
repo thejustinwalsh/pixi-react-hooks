@@ -24,16 +24,17 @@ export const isBundleLoaded = (bundles: string | string[]) =>
 export const load = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
   Assets.load(urls);
 
-export const loadBundle = (bundles: string | string[]) => Assets.loadBundle(bundles);
+export const loadBundle = <T = any>(bundles: string | string[]): Promise<T> =>
+  Assets.loadBundle(bundles);
 
-export const resolve = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
+export const resolve = <T = any>(urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
   Array.isArray(urls)
     ? urls.reduce((acc, url) => {
         const k = key(url);
         if (Assets.cache.has(k)) acc[k] = Assets.cache.get(k);
         return acc;
-      }, {} as Record<string, any>)
+      }, {} as Record<string, T>)
     : Assets.cache.get(key(urls));
 
-export const resolveBundle = (bundles: string | string[]) =>
-  Assets.resolver.resolveBundle(bundles) as any;
+export const resolveBundle = <T = any>(bundles: string | string[]) =>
+  Assets.resolver.resolveBundle(bundles) as T;

@@ -13,9 +13,7 @@ function LoadSingleAsset({url}: {url: string}) {
 }
 
 function LoadMultipleAssets({urls}: {urls: string[]}) {
-  console.log('LoadMultipleAssets', urls);
   const textures = useAssets<{id: string}>(urls);
-  console.log('textures', textures);
   return (
     <div data-testid="assets">
       {Object.entries(textures).map(([key, texture]) => (
@@ -33,8 +31,25 @@ function ErrorFallback({error}: {error: any}) {
 }
 
 describe('useAssets with Suspense', () => {
+  let resolve: () => void;
+  let reject: (reason?: any) => void;
+
   beforeEach(() => {
     const cache = new Map();
+    const promises = new Array<[() => void, (reason?: any) => void]>();
+    resolve = () => {
+      const count = promises.length;
+      promises.forEach(([resolver]) => resolver());
+      promises.length = 0;
+      return count;
+    };
+    reject = (reason?: any) => {
+      const count = promises.length;
+      promises.forEach(([_, reject]) => reject(reason));
+      promises.length = 0;
+      return count;
+    };
+
     vi.resetAllMocks();
     vi.spyOn(Assets, 'load').mockImplementation(async urls => {
       const results = Array.isArray(urls)
@@ -44,8 +59,8 @@ describe('useAssets with Suspense', () => {
           }, {} as Record<string, unknown>)
         : {id: key(urls)};
 
-      return new Promise(resolve => {
-        setTimeout(() => {
+      return new Promise((resolve, reject) => {
+        const resolver = () => {
           if (Array.isArray(urls)) {
             Object.entries(results).forEach(([key, result]) => {
               cache.set(key, result);
@@ -54,7 +69,8 @@ describe('useAssets with Suspense', () => {
             cache.set(key(urls), results);
           }
           resolve(results);
-        }, 10);
+        };
+        promises.push([resolver, reject] as const);
       });
     });
     vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
@@ -76,6 +92,9 @@ describe('useAssets with Suspense', () => {
     // Check loading state
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
+    // Resolve the async actions
+    await act(async () => resolve());
+
     // The component should now be rendered with the loaded texture
     await waitFor(async () => {
       expect(screen.getByTestId('asset')).toHaveTextContent('./texture.png');
@@ -96,6 +115,9 @@ describe('useAssets with Suspense', () => {
     // Check loading state
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
+    // Resolve the async actions
+    await act(async () => resolve());
+
     // Wait for load to complete
     await waitFor(async () => {
       expect(screen.getByTestId('asset-./texture1.png')).toHaveTextContent('./texture1.png');
@@ -105,11 +127,6 @@ describe('useAssets with Suspense', () => {
 
   it('should handle loading errors', async () => {
     const error = 'Failed to load asset';
-    let reject: (reason?: any) => void;
-    const loadPromise = new Promise<Record<string, unknown>>((_, rej) => {
-      reject = rej;
-    });
-    vi.spyOn(Assets, 'load').mockReturnValue(loadPromise);
 
     await act(async () => {
       render(
@@ -124,13 +141,15 @@ describe('useAssets with Suspense', () => {
     // Check loading state
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
-    // Wait for error to be caught
-    await act(async () => {
-      reject(error);
-    });
-    await waitFor(async () => {
-      expect(screen.getByTestId('error')).toHaveTextContent(error);
-    });
+    // Resolve the async actions
+    await act(async () => reject(error));
+
+    await waitFor(
+      async () => {
+        expect(screen.getByTestId('error')).toHaveTextContent(error);
+      },
+      {timeout: 1000},
+    );
   });
 
   it('should reload assets when url changes', async () => {
@@ -149,6 +168,8 @@ describe('useAssets with Suspense', () => {
     // Check loading state first
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
+    await act(async () => resolve());
+
     await waitFor(async () => {
       expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
     });
@@ -158,6 +179,8 @@ describe('useAssets with Suspense', () => {
 
     // Should show loading again
     expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    await act(async () => resolve());
 
     // Wait for second load
     await waitFor(async () => {
