@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/utils/index.ts
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/utils/index.ts
 var _pixijs = require('pixi.js');
 var key = (url) => typeof url === "string" ? url : _optionalChain([(_nullishCoalesce(_nullishCoalesce(url.alias, () => ( url.src)), () => ( ""))), 'optionalAccess', _ => _.toString, 'call', _2 => _2()]);
 var createKey = (urls) => new Set(Array.isArray(urls) ? urls.map(key) : [key(urls)]);
@@ -15,9 +15,13 @@ var resolve = (urls) => Array.isArray(urls) ? urls.reduce((acc, url) => {
 var resolveBundle = (bundles) => _pixijs.Assets.resolver.resolveBundle(bundles);
 
 // src/hooks/useAssetState.ts
-var _react = require('react');
+var _react = require('react'); var _react2 = _interopRequireDefault(_react);
+
+var getCacheForType = (resourceType) => _react2.default.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.A.getCacheForType(
+  resourceType
+);
 var createPromiseCache = () => /* @__PURE__ */ new Map();
-var getPromiseCache = () => _react.unstable_getCacheForType.call(void 0, createPromiseCache);
+var getPromiseCache = () => getCacheForType(createPromiseCache);
 function loadFromCache(key2, load2) {
   const cache = getPromiseCache();
   const cacheKey = Array.from(key2).join("|");
@@ -27,6 +31,7 @@ function loadFromCache(key2, load2) {
   return promise;
 }
 function useAssetState(urls, isLoaded2, load2, resolve2) {
+  console.log("useAssetState", urls);
   const [assetState, setAssetState] = _react.useState.call(void 0, () => {
     const loaded = isLoaded2(urls);
     return loaded ? {
@@ -78,4 +83,4 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
 
 
 exports.isLoaded = isLoaded; exports.isBundleLoaded = isBundleLoaded; exports.load = load; exports.loadBundle = loadBundle; exports.resolve = resolve; exports.resolveBundle = resolveBundle; exports.useAssetState = useAssetState;
-//# sourceMappingURL=chunk-NHYITDMS.cjs.map
+//# sourceMappingURL=chunk-YYFTSOGB.cjs.map
