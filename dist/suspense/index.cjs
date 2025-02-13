@@ -6,22 +6,25 @@
 
 
 
-var _chunkDZ2C4WEOcjs = require('../chunk-DZ2C4WEO.cjs');
+var _chunkNHYITDMScjs = require('../chunk-NHYITDMS.cjs');
 
 // src/suspense/useAssets.ts
 var _react = require('react');
 function useAssets(urls) {
-  const [state, _, thenable] = _chunkDZ2C4WEOcjs.useAssetState.call(void 0, urls, _chunkDZ2C4WEOcjs.isLoaded, _chunkDZ2C4WEOcjs.load, _chunkDZ2C4WEOcjs.resolve);
+  const [state, _, thenable] = _chunkNHYITDMScjs.useAssetState.call(void 0, urls, _chunkNHYITDMScjs.isLoaded, _chunkNHYITDMScjs.load, _chunkNHYITDMScjs.resolve);
   return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
 
 // src/suspense/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const [state, _, thenable] = _chunkDZ2C4WEOcjs.useAssetState.call(void 0, bundles, _chunkDZ2C4WEOcjs.isBundleLoaded, _chunkDZ2C4WEOcjs.loadBundle, _chunkDZ2C4WEOcjs.resolveBundle);
-  return state.isLoaded ? state.data : _react.use.call(void 0, 
-    thenable
+  const [state, _, thenable] = _chunkNHYITDMScjs.useAssetState.call(void 0, 
+    bundles,
+    _chunkNHYITDMScjs.isBundleLoaded,
+    _chunkNHYITDMScjs.loadBundle,
+    _chunkNHYITDMScjs.resolveBundle
   );
+  return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
 }
 
 // src/suspense/useAssetManifest.ts

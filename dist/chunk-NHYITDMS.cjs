@@ -16,6 +16,16 @@ var resolveBundle = (bundles) => _pixijs.Assets.resolver.resolveBundle(bundles);
 
 // src/hooks/useAssetState.ts
 var _react = require('react');
+var createPromiseCache = () => /* @__PURE__ */ new Map();
+var getPromiseCache = () => _react.unstable_getCacheForType.call(void 0, createPromiseCache);
+function loadFromCache(key2, load2) {
+  const cache = getPromiseCache();
+  const cacheKey = Array.from(key2).join("|");
+  let promise = cache.get(cacheKey);
+  if (!promise) promise = load2();
+  cache.set(cacheKey, promise);
+  return promise;
+}
 function useAssetState(urls, isLoaded2, load2, resolve2) {
   const [assetState, setAssetState] = _react.useState.call(void 0, () => {
     const loaded = isLoaded2(urls);
@@ -31,10 +41,13 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
       data: null
     };
   });
-  const [state, setState] = _react.useState.call(void 0, () => ({
-    thenable: !assetState.isLoaded ? load2(urls) : null,
-    key: createKey(urls)
-  }));
+  const [state, setState] = _react.useState.call(void 0, () => {
+    const key2 = createKey(urls);
+    return {
+      thenable: !assetState.isLoaded ? loadFromCache(key2, () => load2(urls)) : null,
+      key: key2
+    };
+  });
   _react.useEffect.call(void 0, () => {
     if (didKeyChange(urls, state.key)) {
       const assetsLoaded = isLoaded2(urls);
@@ -47,6 +60,12 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
       );
     }
   }, [urls, state.key, isLoaded2, resolve2, load2]);
+  if (assetState.status === "error") {
+    return [assetState, setAssetState, state.thenable];
+  }
+  if (assetState.status === "pending") {
+    return [assetState, setAssetState, state.thenable];
+  }
   return [assetState, setAssetState, state.thenable];
 }
 
@@ -59,4 +78,4 @@ function useAssetState(urls, isLoaded2, load2, resolve2) {
 
 
 exports.isLoaded = isLoaded; exports.isBundleLoaded = isBundleLoaded; exports.load = load; exports.loadBundle = loadBundle; exports.resolve = resolve; exports.resolveBundle = resolveBundle; exports.useAssetState = useAssetState;
-//# sourceMappingURL=chunk-DZ2C4WEO.cjs.map
+//# sourceMappingURL=chunk-NHYITDMS.cjs.map

@@ -6,7 +6,7 @@ import {
   resolve,
   resolveBundle,
   useAssetState
-} from "../chunk-PHNTXHPS.js";
+} from "../chunk-XNPG33CZ.js";
 
 // src/suspense/useAssets.ts
 import { use } from "react";
@@ -18,10 +18,13 @@ function useAssets(urls) {
 // src/suspense/useAssetBundle.ts
 import { use as use2 } from "react";
 function useAssetBundle(bundles) {
-  const [state, _, thenable] = useAssetState(bundles, isBundleLoaded, loadBundle, resolveBundle);
-  return state.isLoaded ? state.data : use2(
-    thenable
+  const [state, _, thenable] = useAssetState(
+    bundles,
+    isBundleLoaded,
+    loadBundle,
+    resolveBundle
   );
+  return state.isLoaded ? state.data : use2(thenable);
 }
 
 // src/suspense/useAssetManifest.ts

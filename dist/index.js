@@ -6,7 +6,7 @@ import {
   resolve,
   resolveBundle,
   useAssetState
-} from "./chunk-PHNTXHPS.js";
+} from "./chunk-XNPG33CZ.js";
 
 // src/useAssets.ts
 import { useEffect } from "react";
@@ -21,7 +21,12 @@ function useAssets(urls) {
 // src/useAssetBundle.ts
 import { useEffect as useEffect2 } from "react";
 function useAssetBundle(bundles) {
-  const [state, setState, thenable] = useAssetState(bundles, isBundleLoaded, loadBundle, resolveBundle);
+  const [state, setState, thenable] = useAssetState(
+    bundles,
+    isBundleLoaded,
+    loadBundle,
+    resolveBundle
+  );
   useEffect2(() => {
     thenable?.then((data) => setState({ status: "loaded", isLoaded: true, error: null, data })).catch((error) => setState({ status: "error", isLoaded: false, error, data: null }));
   }, [setState, thenable]);
