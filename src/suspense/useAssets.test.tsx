@@ -2,9 +2,10 @@ import {render, screen, waitFor, cleanup} from '@testing-library/react';
 import {Assets} from 'pixi.js';
 import {useAssets} from './useAssets';
 import {vi, describe, it, expect, beforeEach} from 'vitest';
-import {act, Suspense} from 'react';
-import {ErrorBoundary} from 'react-error-boundary';
+import {act, Suspense, useState} from 'react';
+import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import {key} from '../utils';
+import {useAssetCache} from '../useAssetCache';
 
 // Test components
 function LoadSingleAsset({url}: {url: string}) {
@@ -26,7 +27,7 @@ function LoadMultipleAssets({urls}: {urls: string[]}) {
 }
 
 // Error fallback component
-function ErrorFallback({error}: {error: any}) {
+function ErrorFallback({error}: FallbackProps) {
   return <div data-testid="error">{error}</div>;
 }
 
@@ -152,6 +153,64 @@ describe('useAssets with Suspense', () => {
     );
   });
 
+  it('should attempt to reload assets when recovering from an error', async () => {
+    const error = 'Failed to load asset';
+
+    let reset: () => void;
+    function ErrorFallbackAndRetry({error, resetErrorBoundary}: FallbackProps) {
+      const [isPending, refresh] = useAssetCache();
+      reset = () => {
+        if (!isPending) {
+          refresh();
+          resetErrorBoundary();
+        }
+      };
+      return <div data-testid="error">{error}</div>;
+    }
+
+    function TestWrapper() {
+      return (
+        <ErrorBoundary FallbackComponent={ErrorFallbackAndRetry}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url="./texture.png" />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    // Initial render
+    const {rerender} = await act(async () => render(<TestWrapper />));
+
+    // Check loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => reject(error));
+
+    await waitFor(
+      async () => {
+        expect(screen.getByTestId('error')).toHaveTextContent(error);
+      },
+      {timeout: 1000},
+    );
+
+    // Re-render with resetErrorBoundary set to true
+    await act(async () => reset());
+
+    // Resolve the async actions
+    await act(async () => resolve());
+
+    // Check that the error is reset
+    await waitFor(async () => {
+      expect(screen.queryByTestId('error')).not.toBeInTheDocument();
+    });
+
+    // Check that the asset is loaded
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset')).toHaveTextContent('./texture.png');
+    });
+  });
+
   it('should reload assets when url changes', async () => {
     function TestWrapper({url}: {url: string}) {
       return (
@@ -180,6 +239,7 @@ describe('useAssets with Suspense', () => {
     // Should show loading again
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
+    // Resolve the async actions
     await act(async () => resolve());
 
     // Wait for second load

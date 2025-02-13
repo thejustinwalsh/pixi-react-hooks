@@ -5,5 +5,8 @@ declare module 'react' {
     A: {
       getCacheForType: <T>(resourceType: () => T) => T;
     };
+    H: {
+      useCacheRefresh: () => () => void;
+    };
   };
 }
