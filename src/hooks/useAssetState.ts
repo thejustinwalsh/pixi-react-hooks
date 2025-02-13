@@ -1,4 +1,5 @@
-import {useEffect, useState, unstable_getCacheForType} from 'react';
+import React from 'react';
+import {useEffect, useState} from 'react';
 import {didKeyChange, createKey} from '../utils';
 
 import type {
@@ -33,8 +34,13 @@ type AssetStateReturn<T> =
   | PendingAssetStateReturn<T>
   | ErrorAssetStateReturn<T>;
 
+const getCacheForType = <T>(resourceType: () => T) =>
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.A.getCacheForType(
+    resourceType,
+  );
+
 const createPromiseCache = <T>() => new Map<string, Promise<T>>();
-const getPromiseCache = <T>() => unstable_getCacheForType(createPromiseCache<T>);
+const getPromiseCache = <T>() => getCacheForType(createPromiseCache<T>);
 
 function loadFromCache<T>(key: Set<string>, load: () => Promise<T>) {
   const cache = getPromiseCache<T>();
@@ -53,6 +59,7 @@ export function useAssetState<T, P extends AssetUrl>(
   load: <T>(urls: P) => Promise<T>,
   resolve: <T>(urls: P) => T,
 ): AssetStateReturn<T> {
+  console.log('useAssetState', urls);
   const [assetState, setAssetState] = useState<AssetState<T>>(() => {
     const loaded = isLoaded(urls);
     return loaded

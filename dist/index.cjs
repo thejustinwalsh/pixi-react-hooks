@@ -6,12 +6,12 @@
 
 
 
-var _chunkNHYITDMScjs = require('./chunk-NHYITDMS.cjs');
+var _chunkYYFTSOGBcjs = require('./chunk-YYFTSOGB.cjs');
 
 // src/useAssets.ts
 var _react = require('react');
 function useAssets(urls) {
-  const [state, setState, thenable] = _chunkNHYITDMScjs.useAssetState.call(void 0, urls, _chunkNHYITDMScjs.isLoaded, _chunkNHYITDMScjs.load, _chunkNHYITDMScjs.resolve);
+  const [state, setState, thenable] = _chunkYYFTSOGBcjs.useAssetState.call(void 0, urls, _chunkYYFTSOGBcjs.isLoaded, _chunkYYFTSOGBcjs.load, _chunkYYFTSOGBcjs.resolve);
   _react.useEffect.call(void 0, () => {
     _optionalChain([thenable, 'optionalAccess', _ => _.then, 'call', _2 => _2((data) => setState({ status: "loaded", isLoaded: true, error: null, data })), 'access', _3 => _3.catch, 'call', _4 => _4((error) => setState({ status: "error", isLoaded: false, error, data: null }))]);
   }, [setState, thenable]);
@@ -21,11 +21,11 @@ function useAssets(urls) {
 // src/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const [state, setState, thenable] = _chunkNHYITDMScjs.useAssetState.call(void 0, 
+  const [state, setState, thenable] = _chunkYYFTSOGBcjs.useAssetState.call(void 0, 
     bundles,
-    _chunkNHYITDMScjs.isBundleLoaded,
-    _chunkNHYITDMScjs.loadBundle,
-    _chunkNHYITDMScjs.resolveBundle
+    _chunkYYFTSOGBcjs.isBundleLoaded,
+    _chunkYYFTSOGBcjs.loadBundle,
+    _chunkYYFTSOGBcjs.resolveBundle
   );
   _react.useEffect.call(void 0, () => {
     _optionalChain([thenable, 'optionalAccess', _5 => _5.then, 'call', _6 => _6((data) => setState({ status: "loaded", isLoaded: true, error: null, data })), 'access', _7 => _7.catch, 'call', _8 => _8((error) => setState({ status: "error", isLoaded: false, error, data: null }))]);

@@ -15,9 +15,13 @@ var resolve = (urls) => Array.isArray(urls) ? urls.reduce((acc, url) => {
 var resolveBundle = (bundles) => Assets.resolver.resolveBundle(bundles);
 
 // src/hooks/useAssetState.ts
-import { useEffect, useState, unstable_getCacheForType } from "react";
+import React from "react";
+import { useEffect, useState } from "react";
+var getCacheForType = (resourceType) => React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.A.getCacheForType(
+  resourceType
+);
 var createPromiseCache = () => /* @__PURE__ */ new Map();
-var getPromiseCache = () => unstable_getCacheForType(createPromiseCache);
+var getPromiseCache = () => getCacheForType(createPromiseCache);
 function loadFromCache(key2, load2) {
   const cache = getPromiseCache();
   const cacheKey = Array.from(key2).join("|");
@@ -27,6 +31,7 @@ function loadFromCache(key2, load2) {
   return promise;
 }
 function useAssetState(urls, isLoaded2, load2, resolve2) {
+  console.log("useAssetState", urls);
   const [assetState, setAssetState] = useState(() => {
     const loaded = isLoaded2(urls);
     return loaded ? {
@@ -78,4 +83,4 @@ export {
   resolveBundle,
   useAssetState
 };
-//# sourceMappingURL=chunk-XNPG33CZ.js.map
+//# sourceMappingURL=chunk-EWP2LBVQ.js.map
