@@ -6,7 +6,7 @@ import {
   resolve,
   resolveBundle,
   useAssetState
-} from "./chunk-I47OIYB7.js";
+} from "./chunk-EW4XQNLC.js";
 
 // src/useAssets.ts
 import { useEffect } from "react";
