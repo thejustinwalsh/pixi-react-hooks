@@ -3,7 +3,7 @@ import {useAssetState} from './hooks/useAssetState';
 import {isBundleLoaded, loadBundle, resolveBundle} from './utils';
 
 import type {ResolvedAsset} from 'pixi.js';
-import type {AssetState} from './types';
+import type {AssetState, AssetBundle} from './types';
 
 export function useAssetBundle(bundles: string): AssetState<Record<string, ResolvedAsset>>;
 export function useAssetBundle(
@@ -11,9 +11,12 @@ export function useAssetBundle(
 ): AssetState<Record<string, Record<string, ResolvedAsset>>>;
 
 export function useAssetBundle(bundles: string | string[]) {
-  const [state, setState, thenable] = useAssetState<
-    Record<string, ResolvedAsset> | Record<string, Record<string, ResolvedAsset>>
-  >(bundles, isBundleLoaded, loadBundle, resolveBundle);
+  const [state, setState, thenable] = useAssetState<AssetBundle, string | string[]>(
+    bundles,
+    isBundleLoaded,
+    loadBundle,
+    resolveBundle,
+  );
 
   useEffect(() => {
     thenable

@@ -1,21 +1,5 @@
 import { UnresolvedAsset, ResolvedAsset, AssetsManifest, Assets } from 'pixi.js';
-
-type AssetState<T> = {
-    status: 'pending';
-    isLoaded: false;
-    error: Error | null;
-    data: null;
-} | {
-    status: 'loaded';
-    isLoaded: true;
-    error: null;
-    data: T;
-} | {
-    status: 'error';
-    isLoaded: false;
-    error: Error;
-    data: null;
-};
+import { A as AssetState } from './index-BbUYJT_H.cjs';
 
 declare function useAssets<T>(urls: string | UnresolvedAsset): AssetState<T | undefined>;
 declare function useAssets<T>(urls: string[] | UnresolvedAsset[]): AssetState<Record<string, T>>;
