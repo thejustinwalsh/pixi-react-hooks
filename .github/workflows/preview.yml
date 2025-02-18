@@ -1,11 +1,5 @@
 name: Publish Preview
-on:
-  pull_request:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "!**"
+on: [push, pull_request]
 
 jobs:
   build:
@@ -19,4 +13,4 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm install
       - run: npm run build
-      - run: npx pkg-pr-new publish --no-template
+      - run: npx pkg-pr-new publish -- --no-template
