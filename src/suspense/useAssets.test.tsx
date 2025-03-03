@@ -40,53 +40,62 @@ function ErrorFallback({error}: FallbackProps) {
   return <div data-testid="error">{error}</div>;
 }
 
+function setupBeforeEach() {
+  const results: Record<string, any> = {};
+  const cache = new Map();
+  const promises = new Array<[() => void, (reason?: any) => void]>();
+
+  const resolve = () => {
+    const count = promises.length;
+    promises.forEach(([resolver]) => resolver());
+    promises.length = 0;
+    return count;
+  };
+  const reject = (reason?: any) => {
+    const count = promises.length;
+    promises.forEach(([_, reject]) => reject(reason));
+    promises.length = 0;
+    return count;
+  };
+
+  vi.spyOn(Assets, 'load').mockImplementation(async urls => {
+    Object.keys(results).forEach(key => delete results[key]);
+    Object.assign(
+      results,
+      Array.isArray(urls)
+        ? urls.reduce((acc, url) => {
+            acc[key(url)] = {id: url, data: crypto.randomUUID()};
+            return acc;
+          }, {} as Record<string, unknown>)
+        : {id: key(urls), data: crypto.randomUUID()},
+    );
+
+    return new Promise((resolve, reject) => {
+      const resolver = () => {
+        if (Array.isArray(urls)) {
+          Object.entries(results).forEach(([key, result]) => {
+            cache.set(key, result);
+          });
+        } else {
+          cache.set(key(urls), results);
+        }
+        resolve(results);
+      };
+      promises.push([resolver, reject] as const);
+    });
+  });
+  vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
+  vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
+
+  return {results, resolve, reject};
+}
+
 describe('useAssets with Suspense', () => {
   let results: Record<string, any> = {};
   let resolve: () => void;
   let reject: (reason?: any) => void;
 
-  beforeEach(() => {
-    results = {};
-    const cache = new Map();
-    const promises = new Array<[() => void, (reason?: any) => void]>();
-    resolve = () => {
-      const count = promises.length;
-      promises.forEach(([resolver]) => resolver());
-      promises.length = 0;
-      return count;
-    };
-    reject = (reason?: any) => {
-      const count = promises.length;
-      promises.forEach(([_, reject]) => reject(reason));
-      promises.length = 0;
-      return count;
-    };
-
-    vi.spyOn(Assets, 'load').mockImplementation(async urls => {
-      results = Array.isArray(urls)
-        ? urls.reduce((acc, url) => {
-            acc[key(url)] = {id: url, data: crypto.randomUUID()};
-            return acc;
-          }, {} as Record<string, unknown>)
-        : {id: key(urls), data: crypto.randomUUID()};
-
-      return new Promise((resolve, reject) => {
-        const resolver = () => {
-          if (Array.isArray(urls)) {
-            Object.entries(results).forEach(([key, result]) => {
-              cache.set(key, result);
-            });
-          } else {
-            cache.set(key(urls), results);
-          }
-          resolve(results);
-        };
-        promises.push([resolver, reject] as const);
-      });
-    });
-    vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
-    vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
-  });
+  beforeEach(() => ({results, resolve, reject} = setupBeforeEach()));
 
   afterEach(() => {
     vi.resetAllMocks();
@@ -288,52 +297,12 @@ describe('useAssets with Suspense', () => {
 });
 
 describe('useAssets with Suspense (Global)', () => {
-  let results: Record<string, unknown> = {};
+  let results: Record<string, any> = {};
   let resolve: () => void;
   let reject: (reason?: any) => void;
 
   beforeEach(() => {
-    results = {};
-    const cache = new Map();
-    const promises = new Array<[() => void, (reason?: any) => void]>();
-    resolve = () => {
-      const count = promises.length;
-      promises.forEach(([resolver]) => resolver());
-      promises.length = 0;
-      return count;
-    };
-    reject = (reason?: any) => {
-      const count = promises.length;
-      promises.forEach(([_, reject]) => reject(reason));
-      promises.length = 0;
-      return count;
-    };
-
-    vi.spyOn(Assets, 'load').mockImplementation(async urls => {
-      const results = Array.isArray(urls)
-        ? urls.reduce((acc, url) => {
-            acc[key(url)] = {id: url, data: crypto.randomUUID()};
-            return acc;
-          }, {} as Record<string, unknown>)
-        : {id: key(urls), data: crypto.randomUUID()};
-
-      return new Promise((resolve, reject) => {
-        const resolver = () => {
-          if (Array.isArray(urls)) {
-            Object.entries(results).forEach(([key, result]) => {
-              cache.set(key, result);
-            });
-          } else {
-            cache.set(key(urls), results);
-          }
-          resolve(results);
-        };
-        promises.push([resolver, reject] as const);
-      });
-    });
-    vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
-    vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
-
+    ({results, resolve, reject} = setupBeforeEach());
     vi.spyOn(useAssetCacheOriginal, 'usePromiseCache').mockImplementation(
       useAssetCacheGlobal.usePromiseCache,
     );
