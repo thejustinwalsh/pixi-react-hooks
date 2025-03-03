@@ -15,6 +15,14 @@ vi.mock('pixi.js', () => ({
   },
 }));
 
+vi.mock('../hooks/useAssetCache', async importOriginal => ({
+  ...(await importOriginal<typeof import('../hooks/useAssetCache')>()),
+}));
+
+vi.mock('../suspense/useAssets', async importOriginal => ({
+  ...(await importOriginal<typeof import('../suspense/useAssets')>()),
+}));
+
 // Clean up after each test
 afterEach(() => {
   vi.clearAllMocks();

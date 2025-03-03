@@ -1,25 +1,34 @@
 import {render, screen, waitFor, cleanup} from '@testing-library/react';
 import {Assets} from 'pixi.js';
-import {useAssets} from './useAssets';
-import {vi, describe, it, expect, beforeEach} from 'vitest';
+import {vi, describe, it, expect, beforeEach, afterEach, afterAll} from 'vitest';
 import {act, Suspense, useState} from 'react';
 import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import {key} from '../utils';
-import {useAssetCache} from '../useAssetCache';
+
+import * as useAssetsModule from './useAssets';
+import * as useAssetCacheOriginal from '../hooks/useAssetCache';
+import * as useAssetCacheGlobal from '../hooks/useAssetCacheGlobal';
+
+const {useAssets} = useAssetsModule;
+const {useAssetCache} = useAssetCacheOriginal;
 
 // Test components
 function LoadSingleAsset({url}: {url: string}) {
-  const texture = useAssets<{id: string}>(url);
-  return <div data-testid="asset">{texture.id}</div>;
+  const texture = useAssets<{id: string; data: string}>(url);
+  return (
+    <div data-testid="asset">
+      {texture.id}:{texture.data}
+    </div>
+  );
 }
 
 function LoadMultipleAssets({urls}: {urls: string[]}) {
-  const textures = useAssets<{id: string}>(urls);
+  const textures = useAssets<{id: string; data: string}>(urls);
   return (
     <div data-testid="assets">
       {Object.entries(textures).map(([key, texture]) => (
         <div key={key} data-testid={`asset-${key}`}>
-          {texture.id}
+          {texture.id}:{texture.data}
         </div>
       ))}
     </div>
@@ -32,10 +41,12 @@ function ErrorFallback({error}: FallbackProps) {
 }
 
 describe('useAssets with Suspense', () => {
+  let results: Record<string, any> = {};
   let resolve: () => void;
   let reject: (reason?: any) => void;
 
   beforeEach(() => {
+    results = {};
     const cache = new Map();
     const promises = new Array<[() => void, (reason?: any) => void]>();
     resolve = () => {
@@ -51,14 +62,13 @@ describe('useAssets with Suspense', () => {
       return count;
     };
 
-    vi.resetAllMocks();
     vi.spyOn(Assets, 'load').mockImplementation(async urls => {
-      const results = Array.isArray(urls)
+      results = Array.isArray(urls)
         ? urls.reduce((acc, url) => {
-            acc[key(url)] = {id: url};
+            acc[key(url)] = {id: url, data: crypto.randomUUID()};
             return acc;
           }, {} as Record<string, unknown>)
-        : {id: key(urls)};
+        : {id: key(urls), data: crypto.randomUUID()};
 
       return new Promise((resolve, reject) => {
         const resolver = () => {
@@ -76,7 +86,269 @@ describe('useAssets with Suspense', () => {
     });
     vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
     vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
     cleanup();
+  });
+
+  it('should handle successful loading of a single asset', async () => {
+    const useAssetsSpy = vi.spyOn(useAssetsModule, 'useAssets');
+
+    await act(async () =>
+      render(
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url="./texture.png" />
+          </Suspense>
+        </ErrorBoundary>,
+      ),
+    );
+
+    // Check loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => resolve());
+
+    // The component should now be rendered with the loaded texture
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset')).toHaveTextContent('./texture.png');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
+    });
+  });
+
+  it('should handle loading multiple assets', async () => {
+    await act(async () =>
+      render(
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadMultipleAssets urls={['./texture1.png', './texture2.png']} />
+          </Suspense>
+        </ErrorBoundary>,
+      ),
+    );
+
+    // Check loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => resolve());
+
+    // Wait for load to complete
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset-./texture1.png')).toHaveTextContent('./texture1.png');
+      expect(screen.getByTestId('asset-./texture1.png')).toHaveTextContent(
+        `./texture1.png:${
+          Object.entries(results['./texture1.png']).find(([k, v]) => k === 'data')?.[1]
+        }`,
+      );
+      expect(screen.getByTestId('asset-./texture2.png')).toHaveTextContent('./texture2.png');
+      expect(screen.getByTestId('asset-./texture2.png')).toHaveTextContent(
+        `./texture2.png:${
+          Object.entries(results['./texture2.png']).find(([k, v]) => k === 'data')?.[1]
+        }`,
+      );
+    });
+  });
+
+  it('should handle loading errors', async () => {
+    const error = 'Failed to load asset';
+
+    await act(async () => {
+      render(
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url="./texture.png" />
+          </Suspense>
+        </ErrorBoundary>,
+      );
+    });
+
+    // Check loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => reject(error));
+
+    await waitFor(
+      async () => {
+        expect(screen.getByTestId('error')).toHaveTextContent(error);
+      },
+      {timeout: 1000},
+    );
+  });
+
+  it('should attempt to reload assets when recovering from an error', async () => {
+    const error = 'Failed to load asset';
+
+    let reset: () => void;
+    function ErrorFallbackAndRetry({error, resetErrorBoundary}: FallbackProps) {
+      const [isPending, refresh] = useAssetCache();
+      reset = () => {
+        if (!isPending) {
+          refresh();
+          resetErrorBoundary();
+        }
+      };
+      return <div data-testid="error">{error}</div>;
+    }
+
+    function TestWrapper() {
+      return (
+        <ErrorBoundary FallbackComponent={ErrorFallbackAndRetry}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url="./texture.png" />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    // Initial render
+    const {rerender} = await act(async () => render(<TestWrapper />));
+
+    // Check loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => reject(error));
+
+    await waitFor(
+      async () => {
+        expect(screen.getByTestId('error')).toHaveTextContent(error);
+      },
+      {timeout: 1000},
+    );
+
+    // Re-render with resetErrorBoundary set to true
+    await act(async () => reset());
+
+    // Resolve the async actions
+    await act(async () => resolve());
+
+    // Check that the error is reset
+    await waitFor(async () => {
+      expect(screen.queryByTestId('error')).not.toBeInTheDocument();
+    });
+
+    // Check that the asset is loaded
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset')).toHaveTextContent('./texture.png');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
+    });
+  });
+
+  it('should reload assets when url changes', async () => {
+    function TestWrapper({url}: {url: string}) {
+      return (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url={url} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const {rerender} = await act(async () => render(<TestWrapper url="./texture1.png" />));
+
+    // Check loading state first
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    await act(async () => resolve());
+
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture1.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
+    });
+
+    // Change URL using rerender
+    await act(async () => rerender(<TestWrapper url="./texture2.png" />));
+
+    // Should show loading again
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve the async actions
+    await act(async () => resolve());
+
+    // Wait for second load
+    await waitFor(async () => {
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture2');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture2.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
+    });
+  });
+});
+
+describe('useAssets with Suspense (Global)', () => {
+  let results: Record<string, unknown> = {};
+  let resolve: () => void;
+  let reject: (reason?: any) => void;
+
+  beforeEach(() => {
+    results = {};
+    const cache = new Map();
+    const promises = new Array<[() => void, (reason?: any) => void]>();
+    resolve = () => {
+      const count = promises.length;
+      promises.forEach(([resolver]) => resolver());
+      promises.length = 0;
+      return count;
+    };
+    reject = (reason?: any) => {
+      const count = promises.length;
+      promises.forEach(([_, reject]) => reject(reason));
+      promises.length = 0;
+      return count;
+    };
+
+    vi.spyOn(Assets, 'load').mockImplementation(async urls => {
+      const results = Array.isArray(urls)
+        ? urls.reduce((acc, url) => {
+            acc[key(url)] = {id: url, data: crypto.randomUUID()};
+            return acc;
+          }, {} as Record<string, unknown>)
+        : {id: key(urls), data: crypto.randomUUID()};
+
+      return new Promise((resolve, reject) => {
+        const resolver = () => {
+          if (Array.isArray(urls)) {
+            Object.entries(results).forEach(([key, result]) => {
+              cache.set(key, result);
+            });
+          } else {
+            cache.set(key(urls), results);
+          }
+          resolve(results);
+        };
+        promises.push([resolver, reject] as const);
+      });
+    });
+    vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
+    vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
+
+    vi.spyOn(useAssetCacheOriginal, 'usePromiseCache').mockImplementation(
+      useAssetCacheGlobal.usePromiseCache,
+    );
+    vi.spyOn(useAssetCacheOriginal, 'useAssetCache').mockImplementation(
+      useAssetCacheGlobal.useAssetCache,
+    );
+    vi.spyOn(useAssetCacheOriginal, 'loadFromCache').mockImplementation(
+      useAssetCacheGlobal.loadFromCache,
+    );
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+    cleanup();
+    useAssetCacheGlobal.clearCache(); // We have to clear the global cache to invalidate the cache between tests
   });
 
   it('should handle successful loading of a single asset', async () => {
@@ -129,21 +401,23 @@ describe('useAssets with Suspense', () => {
   it('should handle loading errors', async () => {
     const error = 'Failed to load asset';
 
-    await act(async () => {
+    await act(async () =>
       render(
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<div data-testid="loading">Loading...</div>}>
             <LoadSingleAsset url="./texture.png" />
           </Suspense>
         </ErrorBoundary>,
-      );
-    });
+      ),
+    );
 
     // Check loading state
     expect(screen.getByTestId('loading')).toBeInTheDocument();
 
     // Resolve the async actions
     await act(async () => reject(error));
+
+    await act(async () => render(<div />));
 
     await waitFor(
       async () => {
@@ -158,7 +432,7 @@ describe('useAssets with Suspense', () => {
 
     let reset: () => void;
     function ErrorFallbackAndRetry({error, resetErrorBoundary}: FallbackProps) {
-      const [isPending, refresh] = useAssetCache();
+      const [isPending, refresh] = useAssetCacheGlobal.useAssetCache();
       reset = () => {
         if (!isPending) {
           refresh();
