@@ -1,8 +1,9 @@
-import { defineConfig } from 'tsup'
+import {defineConfig} from 'tsup';
 
 export default defineConfig({
-  entry: ['src/useAssets.ts'],
+  entry: ['src/index.ts', 'src/suspense/index.ts'],
   format: ['cjs', 'esm'],
+  splitting: true,
   dts: true,
   sourcemap: true,
   clean: true,
