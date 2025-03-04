@@ -36,7 +36,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "echo \"TODO\""
   },
   "peerDependencies": {
     "pixi.js": "^8.7.3",
