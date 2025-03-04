@@ -10,5 +10,5 @@ export function useAssets<T>(urls: string[] | UnresolvedAsset[]): Record<string,
 
 export function useAssets<T>(urls: AssetUrl) {
   const [state, _, thenable] = useAssetState<T, AssetUrl>(urls, isLoaded, load, resolve);
-  return state.isLoaded ? state.data : use(thenable!);
+  return state.isLoaded ? state.data : use(thenable);
 }

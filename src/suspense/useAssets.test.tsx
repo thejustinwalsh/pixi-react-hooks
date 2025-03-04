@@ -1,7 +1,7 @@
 import {render, screen, waitFor, cleanup} from '@testing-library/react';
 import {Assets} from 'pixi.js';
 import {vi, describe, it, expect, beforeEach, afterEach, afterAll} from 'vitest';
-import {act, Suspense, useState} from 'react';
+import {act, Suspense} from 'react';
 import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import {key} from '../utils';
 
@@ -13,11 +13,11 @@ const {useAssets} = useAssetsModule;
 const {useAssetCache} = useAssetCacheOriginal;
 
 // Test components
-function LoadSingleAsset({url}: {url: string}) {
+function LoadSingleAsset({url, isRefreshing}: {url: string; isRefreshing?: boolean}) {
   const texture = useAssets<{id: string; data: string}>(url);
   return (
     <div data-testid="asset">
-      {texture.id}:{texture.data}
+      {texture.id}:{texture.data}:{isRefreshing ? 'refreshing' : 'loaded'}
     </div>
   );
 }
@@ -84,8 +84,11 @@ function setupBeforeEach() {
       promises.push([resolver, reject] as const);
     });
   });
+
   vi.spyOn(Assets.cache, 'has').mockImplementation(key => cache.has(key));
   vi.spyOn(Assets.cache, 'get').mockImplementation(key => cache.get(key));
+  vi.spyOn(Assets.cache, 'remove').mockImplementation(key => cache.delete(key));
+  vi.spyOn(Assets.cache, 'reset').mockImplementation(() => cache.clear());
 
   return {results, resolve, reject};
 }
@@ -474,6 +477,9 @@ describe('useAssets with Suspense (Global)', () => {
 
     await waitFor(async () => {
       expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture1.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
     });
 
     // Change URL using rerender
@@ -488,6 +494,9 @@ describe('useAssets with Suspense (Global)', () => {
     // Wait for second load
     await waitFor(async () => {
       expect(screen.getByTestId('asset')).toHaveTextContent('texture2');
+      expect(screen.getByTestId('asset')).toHaveTextContent(
+        `./texture2.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
+      );
     });
   });
 });

@@ -1,4 +1,5 @@
 import React, {useCallback, useTransition} from 'react';
+import {remove} from '../utils';
 
 const getCacheForType = <T>(resourceType: () => T) =>
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.A.getCacheForType(
@@ -43,6 +44,7 @@ export function useAssetCache() {
     (keys?: string[]) => {
       // When we purge we need to reset the cache for the keys that are being purged
       startTransition(() => {
+        remove(keys);
         cacheRefresh();
       });
     },
@@ -50,7 +52,7 @@ export function useAssetCache() {
   );
 
   const clear = useCallback(
-    (all: boolean = false) => {
+    (_: boolean = false) => {
       // TODO: Walk everything in current promise cache and clear it
       // TODO: If all is set, reset the entire backing cache instead
       startTransition(() => {

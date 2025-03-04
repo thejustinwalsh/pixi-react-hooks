@@ -6,8 +6,13 @@ import {afterEach, vi} from 'vitest';
 vi.mock('pixi.js', () => ({
   Assets: {
     load: vi.fn(),
-    cache: new Map(),
-    get: vi.fn(),
+    cache: {
+      has: vi.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      reset: vi.fn(),
+    },
     resolver: {
       hasBundle: vi.fn(),
       resolveBundle: vi.fn(),

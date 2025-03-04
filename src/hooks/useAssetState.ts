@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {useEffect, useState} from 'react';
-import {didKeyChange, createKey} from '../utils';
+import {didKeyChange, createKey, cached} from '../utils';
 import {loadFromCache, usePromiseCache} from './useAssetCache';
 
 import type {
@@ -15,7 +15,7 @@ import type {
 type LoadedAssetStateReturn<T> = readonly [
   LoadedAssetState<T>,
   React.Dispatch<React.SetStateAction<AssetState<T>>>,
-  Promise<T> | null,
+  Promise<T>,
 ];
 
 type PendingAssetStateReturn<T> = readonly [
@@ -61,29 +61,31 @@ export function useAssetState<T, P extends AssetUrl>(
   });
 
   const [state, setState] = useState<HookState<T>>(() => ({
-    thenable: !assetState.isLoaded ? loadFromCache(cache, key, () => load(urls)) : null,
+    thenable: loadFromCache(cache, key, () => load(urls)),
     key,
   }));
 
+  console.log('render ->', cached(cache, key));
   useEffect(() => {
-    if (didKeyChange(urls, state.key)) {
+    const promise = cached(cache, key);
+    console.log('effect ->', promise);
+    if (didKeyChange(urls, state.key) || state.thenable !== promise) {
+      setState({thenable: loadFromCache(cache, key, () => load(urls)), key});
       if (isLoaded(urls)) {
         setAssetState({status: 'loaded', isLoaded: true, error: null, data: resolve(urls)});
-        setState(state => ({...state, key}));
       } else {
-        setState({thenable: loadFromCache(cache, key, () => load(urls)), key});
         setAssetState({status: 'pending', isLoaded: false, error: null, data: null});
       }
     }
-  }, [cache, isLoaded, key, load, resolve, state.key, urls]);
+  }, [cache, isLoaded, key, load, resolve, state, urls]);
 
   if (assetState.status === 'error') {
-    return [assetState, setAssetState, state.thenable!] as const;
+    return [assetState, setAssetState, state.thenable] as const;
   }
 
   if (assetState.status === 'pending') {
-    return [assetState, setAssetState, state.thenable!] as const;
+    return [assetState, setAssetState, state.thenable] as const;
   }
 
-  return [assetState, setAssetState, state.thenable!] as const;
+  return [assetState, setAssetState, state.thenable] as const;
 }

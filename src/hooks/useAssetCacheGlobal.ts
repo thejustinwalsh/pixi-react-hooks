@@ -1,4 +1,5 @@
 import React, {useCallback, useTransition} from 'react';
+import {remove} from '../utils';
 
 let CACHE = new WeakMap<() => any, any>();
 
@@ -14,7 +15,6 @@ const getCacheForType = <T>(resourceType: () => T) => {
 };
 
 const useCacheRefresh = <T>(resourceType?: () => T, initializer?: T) => {
-  const [, rerender] = React.useState({});
   return useCallback(() => {
     if (resourceType) {
       if (initializer) {
@@ -25,7 +25,6 @@ const useCacheRefresh = <T>(resourceType?: () => T, initializer?: T) => {
     } else {
       CACHE = new WeakMap<() => any, any>();
     }
-    rerender({});
   }, [initializer, resourceType]);
 };
 
@@ -64,6 +63,7 @@ export function useAssetCache() {
     (keys?: string[]) => {
       // When we purge we need to reset the cache for the keys that are being purged
       startTransition(() => {
+        remove(keys);
         cacheRefresh();
       });
     },
@@ -71,7 +71,7 @@ export function useAssetCache() {
   );
 
   const clear = useCallback(
-    (all: boolean = false) => {
+    (_: boolean = false) => {
       // TODO: Walk everything in current promise cache and clear it
       // TODO: If all is set, reset the entire backing cache instead
       startTransition(() => {

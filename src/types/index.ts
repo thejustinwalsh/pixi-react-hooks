@@ -31,7 +31,7 @@ export type UnloadedAssetState = {
 export type AssetState<T> = LoadedAssetState<T> | PendingAssetState | ErrorAssetState;
 
 export type HookState<T> = {
-  thenable: Promise<T> | null;
+  thenable: Promise<T>;
   key: Set<string>;
 };
 

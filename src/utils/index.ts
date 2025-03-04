@@ -38,3 +38,21 @@ export const resolve = <T = any>(urls: string | UnresolvedAsset | string[] | Unr
 
 export const resolveBundle = <T = any>(bundles: string | string[]) =>
   Assets.resolver.resolveBundle(bundles) as T;
+
+export const remove = (urls?: string | UnresolvedAsset | string[] | UnresolvedAsset[]) => {
+  if (urls) {
+    Array.isArray(urls)
+      ? urls.forEach(url => Assets.cache.remove(key(url)))
+      : Assets.cache.remove(key(urls));
+  } else {
+    Assets.cache.reset();
+  }
+};
+
+// TODO: How do we remove a bundle from the resolver so we can reload it?
+//export const removeBundle = (bundles: string | string[]) => Assets.resolver.(bundles);
+
+export function cached<T>(cache: Map<string, Promise<T>>, key: Set<string>) {
+  const cacheKey = Array.from(key).join('|');
+  return cache.get(cacheKey);
+}
