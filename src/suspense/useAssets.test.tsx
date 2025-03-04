@@ -297,6 +297,60 @@ describe('useAssets with Suspense', () => {
       );
     });
   });
+
+  it('should handle reloading same asset with new data', async () => {
+    let reload: () => void;
+
+    function TestWrapper({url}: {url: string}) {
+      const [, refresh] = useAssetCache();
+      reload = () => refresh(['./texture1.png']);
+
+      return (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url={url} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const {rerender} = await act(async () => render(<TestWrapper url="./texture1.png" />));
+
+    // Check loading state first
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve pending promises
+    await act(async () => resolve());
+
+    // Verify initial load
+    let initialData: string;
+    await waitFor(async () => {
+      initialData = Object.entries(results).find(([k, v]) => k === 'data')?.[1];
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(initialData);
+      expect(Assets.cache.has(key('./texture1.png'))).toBe(true);
+    });
+
+    // Re-load the asset
+    await act(async () => reload());
+
+    // Ensure the cache was cleared for the asset
+    await waitFor(async () => {
+      expect(Assets.cache.has(key('./texture1.png'))).toBe(false);
+    });
+
+    // Resolve the pending promises
+    await act(async () => resolve());
+
+    // Verfiy the asset was reloaded
+    await waitFor(async () => {
+      const newData = Object.entries(results).find(([k]) => k === 'data')?.[1];
+      expect(newData).not.toEqual(initialData);
+
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(`./texture1.png:${newData}`);
+    });
+  });
 });
 
 describe('useAssets with Suspense (Global)', () => {
@@ -497,6 +551,75 @@ describe('useAssets with Suspense (Global)', () => {
       expect(screen.getByTestId('asset')).toHaveTextContent(
         `./texture2.png:${Object.entries(results).find(([k, v]) => k === 'data')?.[1]}`,
       );
+    });
+  });
+
+  it('should handle reloading same asset with new data', async () => {
+    let reload: () => void;
+
+    function TestWrapper({url}: {url: string}) {
+      const [, refresh] = useAssetCache();
+      reload = () => refresh(['./texture1.png']);
+
+      return (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={<div data-testid="loading">Loading...</div>}>
+            <LoadSingleAsset url={url} />
+          </Suspense>
+        </ErrorBoundary>
+      );
+    }
+
+    const {rerender} = await act(async () => render(<TestWrapper url="./texture1.png" />));
+
+    // Check loading state first
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+
+    // Resolve pending promises
+    await act(async () => resolve());
+
+    // Verify initial load
+    let initialData: string;
+    await waitFor(async () => {
+      initialData = Object.entries(results).find(([k, v]) => k === 'data')?.[1];
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(initialData);
+      expect(Assets.cache.has(key('./texture1.png'))).toBe(true);
+    });
+
+    // Re-load the asset
+    await act(async () => reload());
+
+    /* ERROR:
+     * Calling the refresh method returned from useCacheRefresh when using secret
+     * internals causes a re-render within the component with the new cached state
+     * (undefined) which we can use to trigger a re-render of the component with
+     * the new data. The api in experimental also allows you to seed the cache
+     * with a new promise/value before the render, but we can't do that with the *public api.
+     */
+
+    /* WORKAROUND:
+     * Our useCacheRefresh hook could use useSyncExternalStore to trigger
+     * a re-render of the component with the new cache data, and implement the
+     * experimental api that also takes a seed. This method however, will force
+     * react to use a blocking update, and de-opting to synchronous rendering.
+     */
+
+    // Ensure the cache was cleared for the asset
+    await waitFor(async () => {
+      expect(Assets.cache.has(key('./texture1.png'))).toBe(false);
+    });
+
+    // Resolve the pending promises
+    await act(async () => resolve());
+
+    // Verfiy the asset was reloaded
+    await waitFor(async () => {
+      const newData = Object.entries(results).find(([k]) => k === 'data')?.[1];
+      expect(newData).not.toEqual(initialData);
+
+      expect(screen.getByTestId('asset')).toHaveTextContent('texture1');
+      expect(screen.getByTestId('asset')).toHaveTextContent(`./texture1.png:${newData}`);
     });
   });
 });
