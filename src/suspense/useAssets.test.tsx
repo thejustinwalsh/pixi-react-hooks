@@ -342,6 +342,8 @@ describe('useAssets with Suspense', () => {
     // Resolve the pending promises
     await act(async () => resolve());
 
+    await act(async () => {});
+
     // Verfiy the asset was reloaded
     await waitFor(async () => {
       const newData = Object.entries(results).find(([k]) => k === 'data')?.[1];
@@ -608,6 +610,10 @@ describe('useAssets with Suspense (Global)', () => {
     // Ensure the cache was cleared for the asset
     await waitFor(async () => {
       expect(Assets.cache.has(key('./texture1.png'))).toBe(false);
+    });
+
+    await waitFor(async () => {
+      expect(screen.getByTestId('loading')).toBeInTheDocument();
     });
 
     // Resolve the pending promises
