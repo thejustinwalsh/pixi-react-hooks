@@ -32,7 +32,6 @@ describe('Asset Utils', () => {
   describe('createKey', () => {
     it('should create Set from single string', () => {
       const result = createKey('test.png');
-      console.log('createKey', result, Array.isArray('test.png'));
       expect(result).toBeInstanceOf(Set);
       expect(result.has('test.png')).toBe(true);
     });

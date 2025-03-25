@@ -65,10 +65,8 @@ export function useAssetState<T, P extends AssetUrl>(
     key,
   }));
 
-  console.log('render ->', cached(cache, key));
   useEffect(() => {
     const promise = cached(cache, key);
-    console.log('effect ->', promise);
     if (didKeyChange(urls, state.key) || state.thenable !== promise) {
       setState({thenable: loadFromCache(cache, key, () => load(urls)), key});
       if (isLoaded(urls)) {
