@@ -8,6 +8,10 @@ export const key = (url: string | UnresolvedAsset) =>
 export const createKey = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
   new Set(Array.isArray(urls) ? urls.map(key) : [key(urls)]);
 
+export const hashKey = (key: Set<string>) => {
+  return Array.from(key).sort().join('|');
+};
+
 export const didKeyChange = (
   urls: string | UnresolvedAsset | string[] | UnresolvedAsset[],
   keys: Set<string>,
@@ -53,6 +57,6 @@ export const remove = (urls?: string | UnresolvedAsset | string[] | UnresolvedAs
 //export const removeBundle = (bundles: string | string[]) => Assets.resolver.(bundles);
 
 export function cached<T>(cache: Map<string, Promise<T>>, key: Set<string>) {
-  const cacheKey = Array.from(key).join('|');
-  return cache.get(cacheKey);
+  const k = hashKey(key);
+  return cache.get(k);
 }

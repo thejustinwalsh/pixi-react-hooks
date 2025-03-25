@@ -2,10 +2,11 @@ import {renderHook, waitFor} from '@testing-library/react';
 import {Assets} from 'pixi.js';
 import {useAssets} from './useAssets';
 import {vi, describe, it, expect, beforeEach} from 'vitest';
-
+import * as useAssetCacheModule from './hooks/useAssetCache';
 describe('useAssets', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    useAssetCacheModule.clearCache();
   });
 
   it('should handle successful loading of a single asset', async () => {
