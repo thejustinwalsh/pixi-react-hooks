@@ -1,45 +1,34 @@
-import React, {cache, useCallback, useSyncExternalStore, useTransition} from 'react';
+import React, {useCallback, useTransition} from 'react';
 import {remove} from '../utils';
 
-const GlobalCacheStore = {
-  cache: new Map<string, Promise<any>>(),
-  listeners: [] as (() => void)[],
-
-  reset: () => {
-    GlobalCacheStore.cache = new Map<string, Promise<any>>();
-    console.log('reset  ->', GlobalCacheStore.listeners);
-    GlobalCacheStore.listeners.forEach(l => l());
-  },
-  set: <T>(key: string, promise: Promise<T>) => {
-    const newCache = new Map<string, Promise<any>>();
-    newCache.set(key, promise);
-    GlobalCacheStore.cache = newCache;
-    console.log('set ->', GlobalCacheStore.listeners);
-    GlobalCacheStore.listeners.forEach(l => l());
-  },
-
-  subscribe: (listener: () => void) => {
-    GlobalCacheStore.listeners = [...GlobalCacheStore.listeners, listener];
-    console.log('subscribe ->', GlobalCacheStore.listeners);
-    return () => {
-      console.log('unsubscribe ->', GlobalCacheStore.listeners);
-      GlobalCacheStore.listeners = GlobalCacheStore.listeners.filter(l => l !== listener);
-    };
-  },
-  getSnapshot: () => {
-    return GlobalCacheStore.cache;
-  },
-};
+let CACHE = new WeakMap<() => any, any>();
 
 export const clearCache = () => {
-  GlobalCacheStore.reset();
+  CACHE = new WeakMap<() => any, any>();
 };
 
-const useCacheRefresh = () => {
-  return useCallback(() => {
-    GlobalCacheStore.reset();
-  }, []);
+const getCacheForType = <T>(resourceType: () => T) => {
+  if (!CACHE.has(resourceType)) {
+    CACHE.set(resourceType, resourceType());
+  }
+  return CACHE.get(resourceType);
 };
+
+const useCacheRefresh = <T>(resourceType?: () => T, initializer?: T) => {
+  return useCallback(() => {
+    if (resourceType) {
+      if (initializer) {
+        CACHE.set(resourceType, initializer);
+      } else {
+        CACHE.delete(resourceType);
+      }
+    } else {
+      CACHE = new WeakMap<() => any, any>();
+    }
+  }, [initializer, resourceType]);
+};
+
+const createPromiseCache = <T>() => new Map<string, Promise<T>>();
 
 // TODO: Cache should be a map of keys to promises, and their destination cache with the the asset keys they resolve to
 // TODO: We can allow the user to optionally purge the entire cache or the cache for a specific key
@@ -51,18 +40,17 @@ export function loadFromCache<T>(
   key: Set<string>,
   load: () => Promise<T>,
 ) {
-  console.log('loadFromCache ->', key, cache);
   const cacheKey = Array.from(key).join('|');
   let promise = cache.get(cacheKey);
   if (!promise) {
     promise = load();
-    GlobalCacheStore.set(cacheKey, promise);
+    cache.set(cacheKey, promise);
   }
   return promise;
 }
 
 export function usePromiseCache<T>() {
-  return useSyncExternalStore(GlobalCacheStore.subscribe, GlobalCacheStore.getSnapshot);
+  return getCacheForType(createPromiseCache<T>);
 }
 
 // TODO: Store keys along with the promises so we can purge the Asset cache when we refresh or clear the cache
