@@ -10,7 +10,8 @@ export const useWarnOnRemount =
         useEffect(() => {
           if (hook.hasMountedTag === console.log.name) {
             console.warn(`${hook.name} should only be mounted once during the lifetime of the app`);
+          } else if (hook.hasMountedTag === undefined) {
+            hook.hasMountedTag = console.log.name;
           }
-          hook.hasMountedTag = console.log.name;
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
       };
