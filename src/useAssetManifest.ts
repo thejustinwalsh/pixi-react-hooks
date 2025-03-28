@@ -1,5 +1,6 @@
 import {Assets, AssetsManifest} from 'pixi.js';
 import {useEffect, useState} from 'react';
+import {useWarnOnRemount} from './hooks/useWarnOnRemount';
 
 type AssetManifestState = {
   isLoaded: boolean;
@@ -11,6 +12,7 @@ export function useAssetManifest(
   bundles: string[] = [],
   options: Omit<Parameters<typeof Assets.init>[0], 'manifest'> = {},
 ) {
+  useWarnOnRemount(useAssetManifest);
   const [{isLoaded, thenable}, setState] = useState<AssetManifestState>(() => ({
     isLoaded: false,
     thenable: Assets.init({
