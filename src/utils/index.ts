@@ -28,10 +28,12 @@ export const isBundleLoaded = (bundles: string | string[]) =>
 export const load = (urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
   Assets.load(urls);
 
-export const loadBundle = <T = any>(bundles: string | string[]): Promise<T> =>
+export const loadBundle = <T = unknown>(bundles: string | string[]): Promise<T> =>
   Assets.loadBundle(bundles);
 
-export const resolve = <T = any>(urls: string | UnresolvedAsset | string[] | UnresolvedAsset[]) =>
+export const resolve = <T = unknown>(
+  urls: string | UnresolvedAsset | string[] | UnresolvedAsset[],
+) =>
   Array.isArray(urls)
     ? urls.reduce((acc, url) => {
         const k = key(url);
@@ -40,7 +42,7 @@ export const resolve = <T = any>(urls: string | UnresolvedAsset | string[] | Unr
       }, {} as Record<string, T>)
     : Assets.cache.get(key(urls));
 
-export const resolveBundle = <T = any>(bundles: string | string[]) =>
+export const resolveBundle = <T = unknown>(bundles: string | string[]) =>
   Assets.resolver.resolveBundle(bundles) as T;
 
 export const remove = (urls?: string | UnresolvedAsset | string[] | UnresolvedAsset[]) => {

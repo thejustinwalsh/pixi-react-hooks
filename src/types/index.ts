@@ -37,6 +37,6 @@ export type HookState<T> = {
 
 export type AssetUrl = string | UnresolvedAsset | string[] | UnresolvedAsset[];
 
-export type AssetBundle =
-  | Record<string, ResolvedAsset>
-  | Record<string, Record<string, ResolvedAsset>>;
+export type AssetBundle<T = unknown> =
+  | Record<string, ResolvedAsset<T>>
+  | Record<string, Record<string, ResolvedAsset<T>>>;

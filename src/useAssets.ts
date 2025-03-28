@@ -13,7 +13,7 @@ export function useAssets<T>(urls: AssetUrl) {
 
   useEffect(() => {
     thenable
-      ?.then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
+      .then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
       .catch(error => setState({status: 'error', isLoaded: false, error, data: null}));
   }, [setState, thenable]);
 

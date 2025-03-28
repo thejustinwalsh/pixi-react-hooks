@@ -10,8 +10,8 @@ export function useAssetBundle(
   bundles: string[],
 ): AssetState<Record<string, Record<string, ResolvedAsset>>>;
 
-export function useAssetBundle(bundles: string | string[]) {
-  const [state, setState, thenable] = useAssetState<AssetBundle, string | string[]>(
+export function useAssetBundle<T>(bundles: string | string[]) {
+  const [state, setState, thenable] = useAssetState<AssetBundle<T>, string | string[]>(
     bundles,
     isBundleLoaded,
     loadBundle,
@@ -20,7 +20,7 @@ export function useAssetBundle(bundles: string | string[]) {
 
   useEffect(() => {
     thenable
-      ?.then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
+      .then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
       .catch(error => setState({status: 'error', isLoaded: false, error, data: null}));
   }, [setState, thenable]);
 

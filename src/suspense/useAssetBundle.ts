@@ -4,13 +4,13 @@ import {isBundleLoaded, loadBundle, resolveBundle} from '../utils';
 
 import type {AssetBundle} from '../types';
 
-export function useAssetBundle(bundles: string | string[]) {
-  const [state, _, thenable] = useAssetState<AssetBundle, string | string[]>(
+export function useAssetBundle<T>(bundles: string | string[]) {
+  const [state, _, thenable] = useAssetState<AssetBundle<T>, string | string[]>(
     bundles,
     isBundleLoaded,
     loadBundle,
     resolveBundle,
   );
 
-  return state.isLoaded ? state.data : use(thenable!);
+  return state.isLoaded ? state.data : use(thenable);
 }
