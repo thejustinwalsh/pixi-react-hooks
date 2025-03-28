@@ -3,14 +3,17 @@
 > @pixi/react hooks library
 
 ## Installation
+> Replace `{commit}` with latest commit hash.
 
 ```sh
+# https://pkg.pr.new/thejustinwalsh/pixi-react-hooks@91fa530
+
 # npm
-npm i git+https://github.com/thejustinwalsh/pixi-react-hooks.git
+npm i https://pkg.pr.new/thejustinwalsh/pixi-react-hooks@{commit}
 # yarn
-yarn add git+https://github.com/thejustinwalsh/pixi-react-hooks.git
+yarn add https://pkg.pr.new/thejustinwalsh/pixi-react-hooks@{commit}
 # pnpm
-pnpm add git+https://github.com/thejustinwalsh/pixi-react-hooks.git
+pnpm add https://pkg.pr.new/thejustinwalsh/pixi-react-hooks@{commit}
 ```
 
 ## Hooks
