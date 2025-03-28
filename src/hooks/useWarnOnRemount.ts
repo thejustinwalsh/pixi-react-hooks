@@ -1,4 +1,4 @@
-import {useEffect, useId} from 'react';
+import {useEffect} from 'react';
 
 type InitOnceHook = Function & {hasMountedTag?: string};
 
@@ -7,11 +7,10 @@ export const useWarnOnRemount =
   process.env.NODE_ENV === 'production'
     ? (_hook: InitOnceHook) => {}
     : (hook: InitOnceHook) => {
-        const tag = useId();
         useEffect(() => {
-          if (hook.hasMountedTag === tag) {
+          if (hook.hasMountedTag === console.log.name) {
             console.warn(`${hook.name} should only be mounted once during the lifetime of the app`);
           }
-          hook.hasMountedTag = tag;
+          hook.hasMountedTag = console.log.name;
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
       };
