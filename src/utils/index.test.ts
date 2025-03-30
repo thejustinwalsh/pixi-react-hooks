@@ -113,18 +113,30 @@ describe('Asset Utils', () => {
 
   describe('resolveBundle', () => {
     beforeEach(() => {
-      vi.spyOn(Assets.resolver, 'resolveBundle').mockImplementation(bundle => ({
-        [bundle.toString()]: {
-          data: true,
+      const cache = new Map([
+        ['test1.png', 'texture1'],
+        ['test2.png', 'texture2'],
+      ]);
+      vi.spyOn(Assets.cache, 'has').mockImplementation(k => cache.has(k as string));
+      vi.spyOn(Assets.cache, 'get').mockImplementation(k => cache.get(k as string));
+      vi.spyOn(Assets.resolver, 'resolveBundle').mockImplementation(() => ({
+        'test1.png': {
+          alias: ['test1.png'],
+          src: 'test1.png',
+          data: 'texture1',
+        },
+        'test2.png': {
+          alias: ['test2.png'],
+          src: 'test2.png',
+          data: 'texture2',
         },
       }));
     });
 
     it('should resolve bundle through Assets resolver', () => {
       expect(resolveBundle('test-bundle')).toEqual({
-        'test-bundle': {
-          data: true,
-        },
+        'test1.png': 'texture1',
+        'test2.png': 'texture2',
       });
     });
   });

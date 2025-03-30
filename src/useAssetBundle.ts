@@ -2,16 +2,12 @@ import {useEffect} from 'react';
 import {useAssetState} from './hooks/useAssetState';
 import {isBundleLoaded, loadBundle, resolveBundle} from './utils';
 
-import type {ResolvedAsset} from 'pixi.js';
-import type {AssetState, AssetBundle} from './types';
+import type {AssetState} from './types';
 
-export function useAssetBundle(bundles: string): AssetState<Record<string, ResolvedAsset>>;
-export function useAssetBundle(
-  bundles: string[],
-): AssetState<Record<string, Record<string, ResolvedAsset>>>;
-
-export function useAssetBundle<T>(bundles: string | string[]) {
-  const [state, setState, thenable] = useAssetState<AssetBundle<T>, string | string[]>(
+export function useAssetBundle<T extends Record<string, unknown>>(
+  bundles: string | string[],
+): AssetState<T> {
+  const [state, setState, thenable] = useAssetState<T, string | string[]>(
     bundles,
     isBundleLoaded,
     loadBundle,
