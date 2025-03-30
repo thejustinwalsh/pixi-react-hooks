@@ -42,8 +42,18 @@ export const resolve = <T = unknown>(
       }, {} as Record<string, T>)
     : Assets.cache.get(key(urls));
 
-export const resolveBundle = <T = unknown>(bundles: string | string[]) =>
-  Assets.resolver.resolveBundle(bundles) as T;
+export const resolveBundle = <T = unknown>(bundles: string | string[]) => {
+  const bundleArray = Array.isArray(bundles) ? bundles : [bundles];
+  return bundleArray.reduce((acc, bundle) => {
+    const assetMap = Assets.resolver.resolveBundle(bundle);
+    const assets = Object.keys(assetMap).reduce((acc, asset) => {
+      const k = key(asset);
+      if (Assets.cache.has(k)) acc[k] = Assets.cache.get(k);
+      return acc;
+    }, {} as Record<string, T>);
+    return {...acc, ...assets};
+  }, {} as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+};
 
 export const remove = (urls?: string | UnresolvedAsset | string[] | UnresolvedAsset[]) => {
   if (urls) {
@@ -54,9 +64,6 @@ export const remove = (urls?: string | UnresolvedAsset | string[] | UnresolvedAs
     Assets.cache.reset();
   }
 };
-
-// TODO: How do we remove a bundle from the resolver so we can reload it?
-//export const removeBundle = (bundles: string | string[]) => Assets.resolver.(bundles);
 
 export function cached<T>(cache: Map<string, Promise<T>>, key: Set<string>) {
   const k = hashKey(key);
