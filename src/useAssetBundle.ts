@@ -15,9 +15,24 @@ export function useAssetBundle<T extends Record<string, unknown>>(
   );
 
   useEffect(() => {
-    thenable
-      .then(data => setState({status: 'loaded', isLoaded: true, error: null, data}))
-      .catch(error => setState({status: 'error', isLoaded: false, error, data: null}));
+    const pending = new WeakSet([thenable]);
+    (async () => {
+      try {
+        const data = await thenable;
+        if (pending.has(thenable)) {
+          setState({status: 'loaded', isLoaded: true, error: null, data});
+        }
+      } catch (error: unknown) {
+        if (pending.has(thenable)) {
+          setState({
+            status: 'error',
+            isLoaded: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+            data: null,
+          });
+        }
+      }
+    })();
   }, [setState, thenable]);
 
   return state;
