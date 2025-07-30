@@ -1,88 +1,115 @@
-import {useCallback, useSyncExternalStore, useTransition} from 'react';
-import {hashKey, remove} from '../utils';
+import {useCallback, useMemo} from 'react';
+import {useStore, createStore} from 'react-concurrent-store';
+import {createKey, hashKey, remove} from '../utils';
+import {AssetUrl} from '../types';
 
-export const clearCache = () => {
-  GlobalCacheStore.cache = new Map<string, Promise<unknown>>();
-};
-
-const GlobalCacheStore = {
-  cache: new Map<string, Promise<unknown>>(),
-  listeners: [] as (() => void)[],
-
-  reset: <T>() => {
-    GlobalCacheStore.cache = new Map<string, Promise<T>>();
-    GlobalCacheStore.listeners.forEach(l => l());
-  },
-  set: <T>(key: string, promise: Promise<T>) => {
-    const newCache = new Map<string, Promise<unknown>>();
-    newCache.set(key, promise);
-    GlobalCacheStore.cache = newCache;
-    GlobalCacheStore.listeners.forEach(l => l());
-  },
-
-  subscribe: (listener: () => void) => {
-    GlobalCacheStore.listeners = [...GlobalCacheStore.listeners, listener];
-    return () => {
-      GlobalCacheStore.listeners = GlobalCacheStore.listeners.filter(l => l !== listener);
+type AssetCache<T extends any = any> =
+  | {
+      isLoaded: true;
+      key: Set<string>;
+      data: T;
+      promise: Promise<T>;
+      hash?: string;
+    }
+  | {
+      isLoaded: false;
+      key: Set<string>;
+      data: null;
+      promise: Promise<T>;
+      hash?: string;
+    }
+  | {
+      isLoaded: boolean;
+      key: Set<string>;
+      data: T | null;
+      promise?: Promise<T>;
+      hash?: string;
     };
-  },
-  getSnapshot: () => {
-    return GlobalCacheStore.cache;
-  },
+
+type AssetCacheProps<T extends unknown = unknown, P extends AssetUrl = AssetUrl> = {
+  urls: P;
+  isLoaded: (urls: P) => boolean;
+  load: (urls: P) => Promise<T>;
+  resolve: (urls: P) => T;
 };
 
-const useCacheRefresh = () => {
-  return useCallback(() => {
-    GlobalCacheStore.reset();
-  }, []);
-};
+type AssetCacheAction<T extends unknown = unknown> =
+  | {type: 'load'; payload: AssetCache<T>}
+  | {type: 'reload'; payload: AssetCache<T>};
 
-export function loadFromCache<T>(
-  cache: Map<string, Promise<T>>,
-  key: Set<string>,
-  load: () => Promise<T>,
-) {
-  const k = hashKey(key);
-  let cached = cache.get(k);
-  if (!cached) {
-    cached = load();
-    cache.set(k, cached);
+const PromiseCache = new Map<string, AssetCache>();
+
+const selector = (state: AssetCache, replace: boolean = false) => {
+  const hash = state.hash || hashKey(state.key);
+  if (!replace && PromiseCache.has(hash)) {
+    return PromiseCache.get(hash)!;
   }
-  return cached;
+  return PromiseCache.set(hash, {...state, hash}).get(hash)!;
+};
+
+const storeReducer = (_: AssetCache, action: AssetCacheAction) => {
+  switch (action.type) {
+    case 'load': {
+      return selector(action.payload);
+    }
+    case 'reload': {
+      return selector(action.payload, true);
+    }
+  }
+};
+
+function loadFromCache<T extends unknown, P extends AssetUrl>({
+  urls,
+  isLoaded,
+  load,
+  resolve,
+}: AssetCacheProps<T, P>) {
+  const hash = hashKey(createKey(urls));
+  if (PromiseCache.has(hash)) {
+    return selector(PromiseCache.get(hash)!);
+  }
+
+  const key = createKey(urls);
+  const loaded = isLoaded(urls);
+  const data = loaded ? resolve(urls) : null;
+  const promise = loaded ? Promise.resolve(data) : load(urls);
+  return selector({isLoaded: loaded, key, data, promise});
 }
 
-export function usePromiseCache<T>() {
-  return useSyncExternalStore(GlobalCacheStore.subscribe, GlobalCacheStore.getSnapshot) as Map<
-    string,
-    Promise<T>
-  >;
+export function clear() {
+  PromiseCache.clear();
+  remove();
 }
 
-export function useAssetCache() {
-  const cacheRefresh = useCacheRefresh();
-  const [isPending, startTransition] = useTransition();
+export function reset(keys?: string[]) {
+  if (keys) {
+    keys.forEach(key => PromiseCache.delete(key));
+  } else {
+    clear();
+  }
+}
 
-  const refresh = useCallback(
-    (keys?: string[]) => {
-      startTransition(() => {
-        remove(keys);
-        cacheRefresh();
-      });
-    },
-    [cacheRefresh],
-  );
+export function useAssetCache<T extends unknown, P extends AssetUrl>({
+  urls,
+  isLoaded,
+  load,
+  resolve,
+}: AssetCacheProps<T, P>) {
+  const store = useMemo(() => {
+    const cache = loadFromCache({urls, isLoaded, load, resolve});
+    return createStore<AssetCache<T>, AssetCacheAction<T>>(
+      {...cache, hash: hashKey(cache.key)},
+      storeReducer,
+    );
+  }, [isLoaded, load, resolve, urls]);
 
-  const clear = useCallback(
-    (reset: boolean = false) => {
-      startTransition(() => {
-        if (reset) {
-          remove();
-        }
-        cacheRefresh();
-      });
-    },
-    [cacheRefresh],
-  );
+  const cache = useStore(store);
 
-  return [isPending, refresh, clear] as const;
+  const loader = useCallback(() => {
+    const payload = loadFromCache<T, P>({urls, isLoaded, load, resolve});
+    store.update({type: 'load', payload});
+    return payload;
+  }, [store, isLoaded, load, resolve, urls]);
+
+  return {cache, load: loader};
 }
