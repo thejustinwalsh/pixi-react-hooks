@@ -1,3 +1,5 @@
+import { ResolvedAsset } from 'pixi.js';
+
 type LoadedAssetState<T> = {
     status: 'loaded';
     isLoaded: true;
@@ -17,5 +19,6 @@ type ErrorAssetState = {
     data: null;
 };
 type AssetState<T> = LoadedAssetState<T> | PendingAssetState | ErrorAssetState;
+type AssetBundle = Record<string, ResolvedAsset> | Record<string, Record<string, ResolvedAsset>>;
 
-export type { AssetState as A };
+export type { AssetState as A, AssetBundle as a };

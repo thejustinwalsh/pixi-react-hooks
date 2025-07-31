@@ -5,129 +5,39 @@ import {
   loadBundle,
   resolve,
   resolveBundle,
-  useAssetCache,
-  useWarnOnRemount
-} from "./chunk-CA2UADQU.js";
+  useAssetState
+} from "./chunk-EW4XQNLC.js";
 
 // src/useAssets.ts
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 function useAssets(urls) {
-  const cache = useAssetCache({ urls, isLoaded, load, resolve });
-  const sync = useRef(/* @__PURE__ */ new WeakSet());
-  const [state, setState] = useState(() => ({
-    data: cache.data,
-    error: null
-  }));
+  const [state, setState, thenable] = useAssetState(urls, isLoaded, load, resolve);
   useEffect(() => {
-    if (cache.data === null && !sync.current.has(cache.promise)) {
-      cache.promise.then((data) => {
-        if (sync.current.has(cache.promise)) {
-          setState({
-            data,
-            error: null
-          });
-        }
-        return data;
-      }).catch((error) => {
-        if (sync.current.has(cache.promise)) {
-          setState({
-            data: null,
-            error
-          });
-        }
-      });
-    }
-    sync.current = new WeakSet([cache.promise]);
-  }, [cache.promise, cache.data]);
-  if (state.error) {
-    return {
-      status: "error",
-      isLoaded: false,
-      data: null,
-      error: state.error
-    };
-  }
-  if (state.data) {
-    return {
-      status: "loaded",
-      isLoaded: true,
-      data: state.data,
-      error: null
-    };
-  }
-  return {
-    status: "pending",
-    isLoaded: false,
-    data: null,
-    error: null
-  };
+    thenable?.then((data) => setState({ status: "loaded", isLoaded: true, error: null, data })).catch((error) => setState({ status: "error", isLoaded: false, error, data: null }));
+  }, [setState, thenable]);
+  return state;
 }
 
 // src/useAssetBundle.ts
-import { useEffect as useEffect2, useRef as useRef2, useState as useState2 } from "react";
+import { useEffect as useEffect2 } from "react";
 function useAssetBundle(bundles) {
-  const cache = useAssetCache({
-    urls: bundles,
-    isLoaded: isBundleLoaded,
-    load: loadBundle,
-    resolve: resolveBundle
-  });
-  const sync = useRef2(/* @__PURE__ */ new WeakSet());
-  const [state, setState] = useState2(() => ({
-    data: cache.data,
-    error: null
-  }));
+  const [state, setState, thenable] = useAssetState(
+    bundles,
+    isBundleLoaded,
+    loadBundle,
+    resolveBundle
+  );
   useEffect2(() => {
-    if (cache.data === null && !sync.current.has(cache.promise)) {
-      cache.promise.then((data) => {
-        if (sync.current.has(cache.promise)) {
-          setState({
-            data,
-            error: null
-          });
-        }
-        return data;
-      }).catch((error) => {
-        if (sync.current.has(cache.promise)) {
-          setState({
-            data: null,
-            error
-          });
-        }
-      });
-    }
-    sync.current = new WeakSet([cache.promise]);
-  }, [cache.promise, cache.data]);
-  if (state.error) {
-    return {
-      status: "error",
-      isLoaded: false,
-      data: null,
-      error: state.error
-    };
-  }
-  if (state.data) {
-    return {
-      status: "loaded",
-      isLoaded: true,
-      data: state.data,
-      error: null
-    };
-  }
-  return {
-    status: "pending",
-    isLoaded: false,
-    data: null,
-    error: null
-  };
+    thenable?.then((data) => setState({ status: "loaded", isLoaded: true, error: null, data })).catch((error) => setState({ status: "error", isLoaded: false, error, data: null }));
+  }, [setState, thenable]);
+  return state;
 }
 
 // src/useAssetManifest.ts
 import { Assets } from "pixi.js";
-import { useEffect as useEffect3, useState as useState3 } from "react";
+import { useEffect as useEffect3, useState } from "react";
 function useAssetManifest(manifest, bundles = [], options = {}) {
-  useWarnOnRemount(useAssetManifest);
-  const [{ isLoaded: isLoaded2, thenable }, setState] = useState3(() => ({
+  const [{ isLoaded: isLoaded2, thenable }, setState] = useState(() => ({
     isLoaded: false,
     thenable: Assets.init({
       ...options,

@@ -5,34 +5,32 @@ import {
   loadBundle,
   resolve,
   resolveBundle,
-  useAssetCache,
-  useWarnOnRemount
-} from "../chunk-CA2UADQU.js";
+  useAssetState
+} from "../chunk-EW4XQNLC.js";
 
 // src/suspense/useAssets.ts
 import { use } from "react";
 function useAssets(urls) {
-  const cache = useAssetCache({ urls, isLoaded, load, resolve });
-  return use(cache.promise);
+  const [state, _, thenable] = useAssetState(urls, isLoaded, load, resolve);
+  return state.isLoaded ? state.data : use(thenable);
 }
 
 // src/suspense/useAssetBundle.ts
 import { use as use2 } from "react";
 function useAssetBundle(bundles) {
-  const cache = useAssetCache({
-    urls: bundles,
-    isLoaded: isBundleLoaded,
-    load: loadBundle,
-    resolve: resolveBundle
-  });
-  return use2(cache.promise);
+  const [state, _, thenable] = useAssetState(
+    bundles,
+    isBundleLoaded,
+    loadBundle,
+    resolveBundle
+  );
+  return state.isLoaded ? state.data : use2(thenable);
 }
 
 // src/suspense/useAssetManifest.ts
 import { use as use3, useState } from "react";
 import { Assets } from "pixi.js";
 function useAssetManifest(manifest, bundles = [], options = {}) {
-  useWarnOnRemount(useAssetManifest);
   const [thenable] = useState(
     () => Assets.init({ ...options, manifest }).then(
       () => Assets.backgroundLoadBundle(
