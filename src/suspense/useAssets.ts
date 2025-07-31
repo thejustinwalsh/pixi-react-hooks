@@ -9,6 +9,6 @@ export function useAssets<T>(urls: string | UnresolvedAsset): T;
 export function useAssets<T>(urls: string[] | UnresolvedAsset[]): Record<string, T>;
 
 export function useAssets<T>(urls: AssetUrl) {
-  const {cache} = useAssetCache<T, AssetUrl>({urls, isLoaded, load, resolve});
-  return cache.isLoaded ? cache.data : use(cache.promise!);
+  const cache = useAssetCache<T, AssetUrl>({urls, isLoaded, load, resolve});
+  return use(cache.promise);
 }

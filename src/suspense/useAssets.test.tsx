@@ -9,7 +9,7 @@ import * as useAssetsModule from './useAssets';
 import * as useAssetCacheModule from '../hooks/useAssetCache';
 
 const {useAssets} = useAssetsModule;
-const {clear, reset} = useAssetCacheModule;
+const {clear, reset, unsafeClearCache} = useAssetCacheModule;
 
 // Test components
 function LoadSingleAsset({url, isRefreshing}: {url: string; isRefreshing?: boolean}) {
@@ -102,7 +102,7 @@ describe('useAssets with Suspense', () => {
   afterEach(() => {
     vi.resetAllMocks();
     cleanup();
-    clear(); // We have to clear the global cache to invalidate the cache between tests
+    unsafeClearCache(); // We have to clear the global cache to invalidate the cache between tests
   });
 
   it('should handle successful loading of a single asset', async () => {
@@ -277,11 +277,8 @@ describe('useAssets with Suspense', () => {
       );
     });
 
-    // Change URL using rerender
-    await act(async () => rerender(<TestWrapper url="./texture2.png" />));
-
-    // Should show loading again
-    //expect(screen.getByTestId('loading')).toBeInTheDocument();
+    // Change URL
+    rerender(<TestWrapper url="./texture2.png" />);
 
     // Resolve the async actions
     await act(async () => resolve());
