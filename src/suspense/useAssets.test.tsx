@@ -5,11 +5,11 @@ import {act, Suspense} from 'react';
 import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import {key} from '../utils';
 
+import {useAssetCacheActions} from './useAssetCache';
+import {unsafeClearCache} from '../hooks/useAssetCache';
 import * as useAssetsModule from './useAssets';
-import * as useAssetCacheModule from '../hooks/useAssetCache';
 
 const {useAssets} = useAssetsModule;
-const {clear, reset, unsafeClearCache} = useAssetCacheModule;
 
 // Test components
 function LoadSingleAsset({url, isRefreshing}: {url: string; isRefreshing?: boolean}) {
@@ -199,6 +199,7 @@ describe('useAssets with Suspense', () => {
 
     let reset: () => void;
     function ErrorFallbackAndRetry({error, resetErrorBoundary}: FallbackProps) {
+      const {clear} = useAssetCacheActions();
       reset = () => {
         clear();
         resetErrorBoundary();
@@ -296,6 +297,7 @@ describe('useAssets with Suspense', () => {
     let reload: () => void;
 
     function TestWrapper({url}: {url: string}) {
+      const {reset} = useAssetCacheActions();
       reload = () => reset(['./texture1.png']);
 
       return (

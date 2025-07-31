@@ -1,1 +1,1 @@
-export {useAssetCache} from './hooks/useAssetCache';
+export {useAssetCacheActions} from './hooks/useAssetCache';

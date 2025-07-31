@@ -25,6 +25,43 @@ type AssetCacheAction<T extends unknown = unknown, P extends AssetUrl = AssetUrl
   | {type: 'set'; payload: Required<AssetCacheValue<T>>}
   | {type: 'reset'; payload?: boolean};
 
+function hydrateCache<T extends unknown>(
+  promise: Promise<T>,
+  {
+    key,
+    hash,
+  }: {
+    key: Set<string>;
+    hash: string;
+  },
+): Promise<T> {
+  return promise
+    .then(data => {
+      store.update({
+        type: 'set',
+        payload: {
+          key,
+          data,
+          promise,
+          hash,
+        },
+      });
+      return data;
+    })
+    .catch(error => {
+      store.update({
+        type: 'set',
+        payload: {
+          key,
+          data: null,
+          promise,
+          hash,
+        },
+      });
+      throw error;
+    });
+}
+
 function loadFromCache<T extends unknown, P extends AssetUrl>(
   cache: AssetCache<T>,
   {urls, isLoaded, load, resolve}: AssetCacheProps<T, P>,
@@ -40,17 +77,8 @@ function loadFromCache<T extends unknown, P extends AssetUrl>(
   const data = loaded ? resolve(urls) : null;
   const promise = loaded
     ? (Promise.resolve(data) as Promise<T>)
-    : load(urls).finally(() =>
-        store.update({
-          type: 'set',
-          payload: {
-            key,
-            data,
-            promise,
-            hash,
-          },
-        }),
-      );
+    : hydrateCache(load(urls), {key, hash});
+
   return {hash, cached: {key, data, promise, hash}} as const;
 }
 
@@ -69,12 +97,16 @@ const storeReducer = <T extends unknown = unknown, P extends AssetUrl = AssetUrl
       current.delete(hash);
       return new Map(current);
     }
-    // set: Direct cache mutation, skip re-render
     case 'set': {
+      // Preempt the transition and update the shared cached state (internal api)
+      // - required for hydrating cache when transitioning from suspense or to error states
+      // - skips re-rendering as an implementation detail
       return current.set(action.payload.hash, action.payload);
     }
-    // reset: Direct cache clear, then trigger a re-render
     case 'reset': {
+      // Preempt the transition and update the shared cached state (user api)
+      // - required for resetting cache when transitioning from clearing an error state
+      // - triggers re-renders when called from the user api
       if (action.payload) {
         remove();
       }
@@ -86,6 +118,11 @@ const storeReducer = <T extends unknown = unknown, P extends AssetUrl = AssetUrl
 
 const store = createStore<AssetCache, AssetCacheAction>(new Map(), storeReducer);
 
+/**
+ * Unsafe function to clear the cache.
+ * Used in tests to setup a clean state.
+ * @internal
+ */
 export function unsafeClearCache() {
   // @ts-expect-error
   store._current = store._sync = store._transition = new Map();
@@ -99,23 +136,32 @@ export function refresh() {
   store.update({type: 'reset'});
 }
 
-export function reset(keys?: string[]) {
-  if (keys) {
+export function reset(keys: string[]) {
+  if (keys.length > 0) {
     store.update({
       type: 'remove',
       payload: {urls: keys},
     });
-  } else {
-    store.update({
-      type: 'reset',
-    });
   }
 }
 
+/**
+ * Returns actions to manipulate the asset cache.
+ * @example
+ * const {clear, reset, refresh} = useAssetCacheActions();
+ * clear(); // Clears the entire cache, and removes all assets from the pixi.js cache
+ * reset(['asset1', 'asset2']); // Resets specific assets in the cache, removing them from the pixi.js cache
+ * refresh(); // Refresh the store state, keeps previous resolved assets in pixi.js cache
+ */
 export function useAssetCacheActions() {
   return {clear, reset, refresh};
 }
 
+/**
+ * Shared hook to access the asset cache.
+ * This hook is used internally by other hooks to manage asset loading and caching.
+ * @internal
+ */
 export function useAssetCache<T extends unknown, P extends AssetUrl>({
   urls,
   isLoaded,

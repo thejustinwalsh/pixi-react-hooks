@@ -3,7 +3,7 @@ import {isLoaded, load, resolve} from './utils';
 
 import type {UnresolvedAsset} from 'pixi.js';
 import type {AssetState, AssetUrl, HookState} from './types';
-import {useAssetCache} from './useAssetCache';
+import {useAssetCache} from './hooks/useAssetCache';
 
 export function useAssets<T>(urls: string | UnresolvedAsset): AssetState<T | undefined>;
 export function useAssets<T>(urls: string[] | UnresolvedAsset[]): AssetState<Record<string, T>>;
