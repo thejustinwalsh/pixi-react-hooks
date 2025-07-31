@@ -6,31 +6,33 @@
 
 
 
-var _chunk3M5JBGFOcjs = require('../chunk-3M5JBGFO.cjs');
+
+var _chunkNFSDAYNNcjs = require('../chunk-NFSDAYNN.cjs');
 
 // src/suspense/useAssets.ts
 var _react = require('react');
 function useAssets(urls) {
-  const [state, _, thenable] = _chunk3M5JBGFOcjs.useAssetState.call(void 0, urls, _chunk3M5JBGFOcjs.isLoaded, _chunk3M5JBGFOcjs.load, _chunk3M5JBGFOcjs.resolve);
-  return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
+  const cache = _chunkNFSDAYNNcjs.useAssetCache.call(void 0, { urls, isLoaded: _chunkNFSDAYNNcjs.isLoaded, load: _chunkNFSDAYNNcjs.load, resolve: _chunkNFSDAYNNcjs.resolve });
+  return _react.use.call(void 0, cache.promise);
 }
 
 // src/suspense/useAssetBundle.ts
 
 function useAssetBundle(bundles) {
-  const [state, _, thenable] = _chunk3M5JBGFOcjs.useAssetState.call(void 0, 
-    bundles,
-    _chunk3M5JBGFOcjs.isBundleLoaded,
-    _chunk3M5JBGFOcjs.loadBundle,
-    _chunk3M5JBGFOcjs.resolveBundle
-  );
-  return state.isLoaded ? state.data : _react.use.call(void 0, thenable);
+  const cache = _chunkNFSDAYNNcjs.useAssetCache.call(void 0, {
+    urls: bundles,
+    isLoaded: _chunkNFSDAYNNcjs.isBundleLoaded,
+    load: _chunkNFSDAYNNcjs.loadBundle,
+    resolve: _chunkNFSDAYNNcjs.resolveBundle
+  });
+  return _react.use.call(void 0, cache.promise);
 }
 
 // src/suspense/useAssetManifest.ts
 
 var _pixijs = require('pixi.js');
 function useAssetManifest(manifest, bundles = [], options = {}) {
+  _chunkNFSDAYNNcjs.useWarnOnRemount.call(void 0, useAssetManifest);
   const [thenable] = _react.useState.call(void 0, 
     () => _pixijs.Assets.init({ ...options, manifest }).then(
       () => _pixijs.Assets.backgroundLoadBundle(
