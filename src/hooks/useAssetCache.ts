@@ -136,11 +136,11 @@ export function refresh() {
   store.update({type: 'reset'});
 }
 
-export function reset(keys: string[]) {
-  if (keys.length > 0) {
+export function reset(urls: string[]) {
+  if (urls.length > 0) {
     store.update({
       type: 'remove',
-      payload: {urls: keys},
+      payload: {urls},
     });
   }
 }
