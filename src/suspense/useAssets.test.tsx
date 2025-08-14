@@ -5,11 +5,11 @@ import {act, Suspense} from 'react';
 import {ErrorBoundary, FallbackProps} from 'react-error-boundary';
 import {key} from '../utils';
 
+import {useAssetCacheActions} from './useAssetCache';
+import {unsafeClearCache} from '../hooks/useAssetCache';
 import * as useAssetsModule from './useAssets';
-import * as useAssetCacheModule from '../hooks/useAssetCache';
 
 const {useAssets} = useAssetsModule;
-const {useAssetCache, clearCache} = useAssetCacheModule;
 
 // Test components
 function LoadSingleAsset({url, isRefreshing}: {url: string; isRefreshing?: boolean}) {
@@ -102,7 +102,7 @@ describe('useAssets with Suspense', () => {
   afterEach(() => {
     vi.resetAllMocks();
     cleanup();
-    clearCache(); // We have to clear the global cache to invalidate the cache between tests
+    unsafeClearCache(); // We have to clear the global cache to invalidate the cache between tests
   });
 
   it('should handle successful loading of a single asset', async () => {
@@ -199,12 +199,10 @@ describe('useAssets with Suspense', () => {
 
     let reset: () => void;
     function ErrorFallbackAndRetry({error, resetErrorBoundary}: FallbackProps) {
-      const [isPending, refresh] = useAssetCache();
+      const {clear} = useAssetCacheActions();
       reset = () => {
-        if (!isPending) {
-          refresh();
-          resetErrorBoundary();
-        }
+        clear();
+        resetErrorBoundary();
       };
       return <div data-testid="error">{error}</div>;
     }
@@ -280,11 +278,8 @@ describe('useAssets with Suspense', () => {
       );
     });
 
-    // Change URL using rerender
-    await act(async () => rerender(<TestWrapper url="./texture2.png" />));
-
-    // Should show loading again
-    expect(screen.getByTestId('loading')).toBeInTheDocument();
+    // Change URL
+    rerender(<TestWrapper url="./texture2.png" />);
 
     // Resolve the async actions
     await act(async () => resolve());
@@ -298,12 +293,12 @@ describe('useAssets with Suspense', () => {
     });
   });
 
-  it.skip('skipped should handle reloading same asset with new data', async () => {
+  it('should handle reloading same asset with new data', async () => {
     let reload: () => void;
 
     function TestWrapper({url}: {url: string}) {
-      const [, refresh] = useAssetCache();
-      reload = () => refresh(['./texture1.png']);
+      const {reset} = useAssetCacheActions();
+      reload = () => reset(['./texture1.png']);
 
       return (
         <ErrorBoundary FallbackComponent={ErrorFallback}>

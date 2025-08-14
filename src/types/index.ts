@@ -31,8 +31,8 @@ export type UnloadedAssetState = {
 export type AssetState<T> = LoadedAssetState<T> | PendingAssetState | ErrorAssetState;
 
 export type HookState<T> = {
-  thenable: Promise<T>;
-  key: Set<string>;
+  data: T | null;
+  error: Error | null;
 };
 
 export type AssetUrl = string | UnresolvedAsset | string[] | UnresolvedAsset[];

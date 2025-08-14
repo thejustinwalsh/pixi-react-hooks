@@ -1,36 +1,65 @@
-import {useEffect} from 'react';
-import {useAssetState} from './hooks/useAssetState';
+import {useEffect, useRef, useState} from 'react';
 import {isLoaded, load, resolve} from './utils';
 
 import type {UnresolvedAsset} from 'pixi.js';
-import type {AssetState, AssetUrl} from './types';
+import type {AssetState, AssetUrl, HookState} from './types';
+import {useAssetCache} from './hooks/useAssetCache';
 
 export function useAssets<T>(urls: string | UnresolvedAsset): AssetState<T | undefined>;
 export function useAssets<T>(urls: string[] | UnresolvedAsset[]): AssetState<Record<string, T>>;
 
 export function useAssets<T>(urls: AssetUrl) {
-  const [state, setState, thenable] = useAssetState<T, AssetUrl>(urls, isLoaded, load, resolve);
+  const cache = useAssetCache<T, AssetUrl>({urls, isLoaded, load, resolve});
+  const sync = useRef(new WeakSet<Promise<unknown>>());
+  const [state, setState] = useState<HookState<T | Record<string, T>>>(() => ({
+    data: cache.data,
+    error: null,
+  }));
 
   useEffect(() => {
-    const pending = new WeakSet([thenable]);
-    (async () => {
-      try {
-        const data = await thenable;
-        if (pending.has(thenable)) {
-          setState({status: 'loaded', isLoaded: true, error: null, data});
-        }
-      } catch (error: unknown) {
-        if (pending.has(thenable)) {
-          setState({
-            status: 'error',
-            isLoaded: false,
-            error: error instanceof Error ? error : new Error(String(error)),
-            data: null,
-          });
-        }
-      }
-    })();
-  }, [setState, thenable]);
+    if (cache.data === null && !sync.current.has(cache.promise)) {
+      cache.promise
+        .then(data => {
+          if (sync.current.has(cache.promise)) {
+            setState({
+              data,
+              error: null,
+            });
+          }
+          return data;
+        })
+        .catch(error => {
+          if (sync.current.has(cache.promise)) {
+            setState({
+              data: null,
+              error,
+            });
+          }
+        });
+    }
+    sync.current = new WeakSet([cache.promise]);
+  }, [cache.promise, cache.data]);
 
-  return state;
+  if (state.error) {
+    return {
+      status: 'error',
+      isLoaded: false,
+      data: null,
+      error: state.error,
+    };
+  }
+  if (state.data) {
+    return {
+      status: 'loaded',
+      isLoaded: true,
+      data: state.data,
+      error: null,
+    };
+  }
+  return {
+    status: 'pending',
+    isLoaded: false,
+    data: null,
+    error: null,
+  };
 }

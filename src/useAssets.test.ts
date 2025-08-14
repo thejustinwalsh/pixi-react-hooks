@@ -1,12 +1,13 @@
-import {renderHook, waitFor} from '@testing-library/react';
+import {cleanup, renderHook, waitFor} from '@testing-library/react';
 import {Assets} from 'pixi.js';
 import {useAssets} from './useAssets';
-import {vi, describe, it, expect, beforeEach} from 'vitest';
-import * as useAssetCacheModule from './hooks/useAssetCache';
+import {vi, describe, it, expect, afterEach} from 'vitest';
+import {unsafeClearCache} from './hooks/useAssetCache';
 describe('useAssets', () => {
-  beforeEach(() => {
+  afterEach(() => {
     vi.resetAllMocks();
-    useAssetCacheModule.clearCache();
+    cleanup();
+    unsafeClearCache();
   });
 
   it('should handle successful loading of a single asset', async () => {
